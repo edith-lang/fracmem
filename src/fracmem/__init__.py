@@ -11,7 +11,7 @@ Quick start
     f.fit(train_signals, j_max=10000)   # train_signals: a handful of representative example signals
     y_hat = f.predict(new_signal)       # O(L+p) cost per sample, forever
 
-See https://github.com/<your-username>/fracmem for the full theory and
+See https://github.com/edith-lang/fracmem for the full theory and
 code-walkthrough documentation.
 """
 from .kernel import gl_weights, full_gl_derivative, local_exact_term, delay

@@ -5,7 +5,7 @@ Thanks for considering a contribution. This is a small, focused library, so the 
 ## Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/fracmem.git
+git clone https://github.com/edith-lang/fracmem.git
 cd fracmem
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"

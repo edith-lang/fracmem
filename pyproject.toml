@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 authors = [
-    {name = "Your Name", email = "you@example.com"}
+    {name = "Adithyan Lalu", email = "adithyanlalu@gmail.com"}
 ]
 keywords = [
     "fractional calculus",
@@ -41,10 +41,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/YOUR_USERNAME/fracmem"
-Documentation = "https://github.com/YOUR_USERNAME/fracmem"
-Repository = "https://github.com/YOUR_USERNAME/fracmem"
-Issues = "https://github.com/YOUR_USERNAME/fracmem/issues"
+Homepage = "https://github.com/edith-lang/fracmem"
+Documentation = "https://github.com/edith-lang/fracmem"
+Repository = "https://github.com/edith-lang/fracmem"
+Issues = "https://github.com/edith-lang/fracmem/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
