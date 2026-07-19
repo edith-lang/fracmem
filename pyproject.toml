@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fracmem"
+version = "0.1.0"
+description = "Compressed fractional-order derivative filters with a certified offline error bound and data-refined weights"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Your Name", email = "you@example.com"}
+]
+keywords = [
+    "fractional calculus",
+    "fractional-order control",
+    "Grunwald-Letnikov",
+    "sum of exponentials",
+    "embedded systems",
+    "signal processing",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: System :: Embedded Systems",
+]
+dependencies = [
+    "numpy>=1.20",
+    "scipy>=1.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/YOUR_USERNAME/fracmem"
+Documentation = "https://github.com/YOUR_USERNAME/fracmem"
+Repository = "https://github.com/YOUR_USERNAME/fracmem"
+Issues = "https://github.com/YOUR_USERNAME/fracmem/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
