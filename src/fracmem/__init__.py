@@ -14,27 +14,46 @@ Quick start
 See https://github.com/edith-lang/fracmem for the full theory and
 code-walkthrough documentation.
 """
-from .kernel import gl_weights, full_gl_derivative, local_exact_term, delay
-from .soe import soe_nodes_and_weights, soe_refit_weights, soe_tail_kernel
+from .kernel import (
+    gl_weights,
+    full_gl_derivative,
+    local_exact_term,
+    delay,
+    rl_derivative,
+    caputo_derivative,
+)
+from .soe import (
+    soe_nodes_and_weights,
+    soe_refit_weights,
+    soe_tail_kernel,
+    soe_tail_error,
+    adaptive_soe_tail_kernel,
+)
 from .filter import (
     CompressedFractionalFilter,
     diagonal_recurrence,
     mode_features,
     ridge_solve_c,
     cv_select_reg,
+    DEFINITIONS,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "CompressedFractionalFilter",
+    "DEFINITIONS",
     "gl_weights",
     "full_gl_derivative",
     "local_exact_term",
     "delay",
+    "rl_derivative",
+    "caputo_derivative",
     "soe_nodes_and_weights",
     "soe_refit_weights",
     "soe_tail_kernel",
+    "soe_tail_error",
+    "adaptive_soe_tail_kernel",
     "diagonal_recurrence",
     "mode_features",
     "ridge_solve_c",

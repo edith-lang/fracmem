@@ -16,6 +16,19 @@ from .soe import soe_tail_kernel
 
 DEFAULT_REG_CANDIDATES = (1e-11, 3e-11, 1e-10, 3e-10, 1e-9, 3e-9, 1e-8, 1e-7, 1e-6, 1e-5)
 
+DEFINITIONS = ("gl", "rl", "caputo")  # "gl" and "rl" are the same discretization
+
+
+def _apply_definition(x: np.ndarray, definition: str) -> np.ndarray:
+    """GL and RL act on x as-is (causal, x(t)=0 for t<0). Caputo acts on
+    x shifted by its own initial sample -- see kernel.caputo_derivative
+    for why that substitution is valid."""
+    if definition not in DEFINITIONS:
+        raise ValueError(f"definition must be one of {DEFINITIONS}, got {definition!r}")
+    if definition == "caputo":
+        return x - x[0]
+    return x
+
 
 def diagonal_recurrence(x_delayed: np.ndarray, lam: np.ndarray, c: np.ndarray) -> np.ndarray:
     """THE deployed filter: p independent one-line recursions.
@@ -94,11 +107,19 @@ class CompressedFractionalFilter:
     >>> y_hat = f.predict(np.random.randn(5000))
     """
 
-    def __init__(self, alpha: float, h: float, L: int = 32, p: int = 16):
+    def __init__(self, alpha: float, h: float, L: int = 32, p: int = 16, definition: str = "gl"):
+        if definition not in DEFINITIONS:
+            raise ValueError(f"definition must be one of {DEFINITIONS}, got {definition!r}")
         self.alpha, self.h, self.L, self.p = alpha, h, L, p
+        self.definition = definition
         self.lam = None      # decay rates: fixed forever once computed, never re-fit
         self.c = None        # linear weights: the only thing data ever touches
         self.reg_used = None
+        self._stream_w = None
+        self._stream_buf = None
+        self._stream_m = None
+        self._stream_x0 = None
+        self._stream_k = None
 
     def _design_decay_rates(self, j_max: int, w: np.ndarray):
         """Pure mathematics, no data: derive the SOE-quadrature decay
@@ -117,6 +138,8 @@ class CompressedFractionalFilter:
         if j_max is None:
             j_max = n_samples
         w = gl_weights(self.alpha, max(j_max, n_samples) + 1)
+        train_signals = [_apply_definition(np.asarray(x, dtype=np.float64), self.definition)
+                          for x in train_signals]
 
         gold = np.stack([full_gl_derivative(x, self.alpha, self.h, w) for x in train_signals])
         local = np.stack([local_exact_term(x, self.alpha, self.h, self.L, w) for x in train_signals])
@@ -142,8 +165,96 @@ class CompressedFractionalFilter:
             raise RuntimeError("call .fit(...) before .predict(...)")
         if w is None:
             w = gl_weights(self.alpha, self.L)
-        x = np.asarray(x)
+        x = _apply_definition(np.asarray(x, dtype=np.float64), self.definition)
         local = local_exact_term(x, self.alpha, self.h, self.L, w)
         x_delayed = delay(x, self.L)
         tail = diagonal_recurrence(x_delayed, self.lam, self.c)
         return local + tail
+
+    # ---- streaming (O(L+p) per sample, fixed memory) ----------------
+    # Same math as predict(), one sample at a time. This is what a
+    # ROS2 node or any other online consumer should call; it is also
+    # the reference the embedded (MicroPython) runtime is checked
+    # against in tests.
+    def reset_stream(self, w: np.ndarray = None):
+        if self.lam is None or self.c is None:
+            raise RuntimeError("call .fit(...) before streaming")
+        self._stream_w = gl_weights(self.alpha, self.L) if w is None else np.asarray(w[:self.L])
+        self._stream_buf = np.zeros(self.L)
+        self._stream_m = np.zeros(self.p)
+        self._stream_x0 = None
+        self._stream_k = 0
+        return self
+
+    def step(self, x_k: float) -> float:
+        """Feed one new sample, get back one derivative estimate."""
+        if self.lam is None or self.c is None:
+            raise RuntimeError("call .fit(...) before .step(...)")
+        if self._stream_w is None:
+            self.reset_stream()
+        if self.definition == "caputo":
+            if self._stream_x0 is None:
+                self._stream_x0 = x_k
+            x_k = x_k - self._stream_x0
+
+        dropped = self._stream_buf[-1]  # = x_{k-L} (0 while history is still short)
+        self._stream_buf = np.roll(self._stream_buf, 1)
+        self._stream_buf[0] = x_k
+        local = float(self._stream_w @ self._stream_buf) * (self.h ** -self.alpha)
+
+        self._stream_m = self.lam * self._stream_m + dropped
+        tail = float(self.c @ self._stream_m)
+        self._stream_k += 1
+        return local + tail
+
+    # ---- persistence: save the deployed (lam, c) pair ---------------
+    def save(self, path: str):
+        if self.lam is None or self.c is None:
+            raise RuntimeError("call .fit(...) before .save(...)")
+        np.savez(path, alpha=self.alpha, h=self.h, L=self.L, p=self.p,
+                  definition=self.definition, lam=self.lam, c=self.c)
+
+    @classmethod
+    def load(cls, path: str) -> "CompressedFractionalFilter":
+        data = np.load(path)
+        f = cls(alpha=float(data["alpha"]), h=float(data["h"]), L=int(data["L"]), p=int(data["p"]),
+                definition=str(data["definition"]))
+        f.lam = data["lam"]
+        f.c = data["c"]
+        return f
+
+    # ---- automatic parameter selection -------------------------------
+    @classmethod
+    def auto(cls, alpha: float, h: float, tol: float = 1e-3, train_signals=None,
+              definition: str = "gl", n_samples: int = 4000, n_signals: int = 6,
+              L_candidates=(8, 16, 32, 64), p_candidates=(4, 8, 16, 32), seed: int = 0):
+        """Grid-search (L, p) cheapest-first (L+p is the deployed
+        per-sample cost and persistent-state size) and return the fitted
+        filter for the cheapest configuration whose held-out RMSE meets
+        `tol`, falling back to the lowest-RMSE configuration tried if
+        none do. Uses synthetic random-walk signals unless
+        `train_signals` is given -- pass your own for a validation
+        target that reflects the real deployment signal."""
+        rng = np.random.default_rng(seed)
+        if train_signals is None:
+            train_signals = [np.cumsum(rng.standard_normal(n_samples)) * 0.01 for _ in range(n_signals)]
+        val_signal = np.cumsum(rng.standard_normal(n_samples)) * 0.01
+
+        w_val = gl_weights(alpha, n_samples + 1)
+        gold = full_gl_derivative(_apply_definition(val_signal, definition), alpha, h, w_val)
+
+        candidates = sorted((L, p) for L in L_candidates for p in p_candidates)
+        candidates.sort(key=lambda Lp: Lp[0] + Lp[1])
+
+        best = None  # (rmse, filter)
+        for L, p in candidates:
+            f = cls(alpha=alpha, h=h, L=L, p=p, definition=definition)
+            f.fit(train_signals, j_max=n_samples)
+            pred = f.predict(val_signal, w=w_val)
+            rmse = float(np.sqrt(np.mean((pred - gold) ** 2)))
+            f.auto_rmse_ = rmse
+            if best is None or rmse < best.auto_rmse_:
+                best = f
+            if rmse < tol:
+                return f
+        return best

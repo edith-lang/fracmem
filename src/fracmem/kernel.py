@@ -39,6 +39,27 @@ def local_exact_term(x: np.ndarray, alpha: float, h: float, L: int, w: np.ndarra
     return y * (h ** (-alpha))
 
 
+def rl_derivative(x: np.ndarray, alpha: float, h: float, w: np.ndarray) -> np.ndarray:
+    """Riemann-Liouville derivative, lower terminal at t=0. For a causal
+    signal (x(t)=0, t<0) the GL discretization IS the standard numerical
+    approximation of the RL derivative -- same convolution, different
+    name so callers can express intent. See Podlubny, Ch. 2/3 for the
+    GL/RL equivalence."""
+    return full_gl_derivative(x, alpha, h, w)
+
+
+def caputo_derivative(x: np.ndarray, alpha: float, h: float, w: np.ndarray) -> np.ndarray:
+    """Caputo derivative, 0 < alpha < 1: D^alpha_C x(t) = D^alpha_RL
+    [x(t) - x(0)](t). Subtracting the (constant) initial value removes
+    the t^-alpha singularity the RL derivative has at t=0 for a
+    nonzero-initial-value signal -- everything downstream is then the
+    ordinary GL/RL machinery applied to the shifted signal."""
+    x = np.asarray(x, dtype=np.float64)
+    x0 = x[0] if x.ndim == 1 else x[..., :1]
+    return full_gl_derivative(x - x0, alpha, h, w) if x.ndim == 1 \
+        else np.stack([full_gl_derivative(xi, alpha, h, w) for xi in (x - x0)])
+
+
 def delay(x: np.ndarray, L: int) -> np.ndarray:
     """x shifted right by L samples, zero-padded -- the tail filter's own
     input only starts once the exact local window has consumed its L

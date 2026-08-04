@@ -1,0 +1,58 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  core:
+    name: core (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install fracmem (dev extras)
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  backends:
+    name: torch + jax backends (py3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install fracmem with all extras
+        run: pip install -e ".[torch,jax,dev]"
+
+      - name: Run full test suite
+        run: pytest tests/ -v
+
+      - name: Run examples
+        run: |
+          python examples/basic-usage.py
+          python examples/streaming.py
+          python examples/definitions.py
+          python examples/auto-params.py
+          python examples/adaptive-soe.py
+          python examples/save-and-load.py
+          python examples/embedded-export.py
+          python examples/torch-backend.py
+          python examples/jax-backend.py

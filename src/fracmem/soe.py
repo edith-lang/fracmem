@@ -62,3 +62,34 @@ def soe_tail_kernel(alpha: float, L: int, p: int, w: np.ndarray, j_max: int):
     lam, _c0 = soe_nodes_and_weights(alpha, L, m_max, p)
     c = soe_refit_weights(alpha, L, w, lam, j_max)
     return lam, c
+
+
+def soe_tail_error(alpha: float, L: int, w: np.ndarray, lam: np.ndarray, c: np.ndarray,
+                    j_max: int, n_probe: int = 200) -> float:
+    """Worst-case relative error of the (lambda, c) tail reconstruction
+    against the exact GL tail weights, sampled at log-spaced probe
+    points beyond L -- the same error the classical bound is certifying,
+    evaluated directly rather than bounded."""
+    m_max = max(j_max - L, 1)
+    m_grid = np.unique(np.round(np.exp(np.linspace(0, np.log(m_max), n_probe))).astype(int))
+    m_grid = m_grid[m_grid <= m_max]
+    target = w[L + m_grid]
+    approx = (lam[None, :] ** m_grid[:, None]) @ c
+    rel_err = np.abs(approx - target) / np.maximum(np.abs(target), 1e-300)
+    return float(np.max(rel_err))
+
+
+def adaptive_soe_tail_kernel(alpha: float, L: int, w: np.ndarray, j_max: int,
+                              tol: float = 1e-3, p_min: int = 4, p_max: int = 64):
+    """Like soe_tail_kernel, but chooses the mode count p for you: starts
+    at p_min and doubles until the worst-case relative tail error (see
+    soe_tail_error) is <= tol or p_max is reached. Trades a slightly
+    slower design step for not having to hand-pick p per alpha/L/budget.
+    Returns (lambda, c, p_used, achieved_err)."""
+    p = min(p_min, p_max)
+    while True:
+        lam, c = soe_tail_kernel(alpha, L, p, w, j_max)
+        err = soe_tail_error(alpha, L, w, lam, c, j_max)
+        if err <= tol or p >= p_max:
+            return lam, c, p, err
+        p = min(p * 2, p_max)

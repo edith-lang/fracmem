@@ -8,3 +8,8 @@ dist/
 venv/
 *.egg
 .DS_Store
+
+# colcon build artifacts (ros2_ws/src is the actual source)
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/

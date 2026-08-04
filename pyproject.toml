@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fracmem"
-version = "0.1.0"
+version = "0.2.0"
 description = "Compressed fractional-order derivative filters with a certified offline error bound and data-refined weights"
 readme = "README.md"
 license = {text = "MIT"}
@@ -39,6 +39,11 @@ dependencies = [
     "numpy>=1.20",
     "scipy>=1.6",
 ]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0"]
+jax = ["jax>=0.4", "jaxlib>=0.4"]
+dev = ["pytest>=7"]
 
 [project.urls]
 Homepage = "https://github.com/edith-lang/fracmem"
