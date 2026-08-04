@@ -26,15 +26,6 @@ Fractional-order derivatives (used in fractional-order PID control, viscoelastic
 
 ```bash
 pip install fracmem
-
-# with the optional PyTorch / GPU backend
-pip install fracmem[torch]
-
-# with the optional JAX backend
-pip install fracmem[jax]
-
-# both, plus test dependencies
-pip install fracmem[torch,jax,dev]
 ```
 
 ### Directly from GitHub
@@ -53,7 +44,7 @@ pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
-`fracmem` itself only depends on `numpy` and `scipy` — `torch` and `jax` are optional extras, needed only for their respective backends.
+`fracmem`'s only dependencies are `numpy` and `scipy` — deliberately lightweight, since the whole point is to be embeddable.
 
 ## Quick example
 
@@ -87,7 +78,7 @@ The [`examples/`](examples/) directory has a standalone, runnable script for eve
 ```bash
 git clone https://github.com/edith-lang/fracmem.git
 cd fracmem
-pip install -e ".[torch,jax,dev]"
+pip install -e ".[dev]"
 python examples/basic-usage.py
 ```
 
@@ -99,11 +90,7 @@ python examples/basic-usage.py
 | [`auto-params.py`](examples/auto-params.py) | `CompressedFractionalFilter.auto(...)` picks `(L, p)` from a target RMSE. |
 | [`adaptive-soe.py`](examples/adaptive-soe.py) | The low-level SOE tail construction growing `p` until a tolerance is met. |
 | [`save-and-load.py`](examples/save-and-load.py) | Persist a fitted filter to disk and reload it elsewhere. |
-| [`torch-backend.py`](examples/torch-backend.py) | `TorchFractionalLayer`, a differentiable, GPU-ready `nn.Module`. |
-| [`jax-backend.py`](examples/jax-backend.py) | `jit`/`grad`/`vmap`-compatible functional predict. |
-| [`embedded-export.py`](examples/embedded-export.py) | Export a fitted filter as a standalone MicroPython file, then verify it under CPython. |
-
-The [`ros2_ws/src/fracmem_ros2`](ros2_ws/src/fracmem_ros2) package is a fuller worked example for streaming a live topic through a fitted filter — see [ROS2](#ros2) below.
+| [`embedded-export.py`](examples/embedded-export.py) | Export a fitted filter as a standalone MicroPython file, then verify it under CPython — flash-ready. |
 
 ## Features
 
@@ -111,9 +98,6 @@ The [`ros2_ws/src/fracmem_ros2`](ros2_ws/src/fracmem_ros2) package is a fuller w
 - **Streaming**: an `O(L+p)`-per-sample `.step()` API for online use, alongside the batch `.predict()`.
 - **Adaptive SOE**: automatically grow the number of exponential modes until a target error tolerance is met, instead of hand-picking `p`.
 - **Automatic parameter selection**: `CompressedFractionalFilter.auto(...)` grid-searches `(L, p)` for the cheapest deployed filter meeting a target RMSE.
-- **GPU / PyTorch**: `fracmem.backends.torch_backend.TorchFractionalLayer` — a differentiable `nn.Module`, runs on CUDA/MPS via `.to(device)`.
-- **JAX**: `fracmem.backends.jax_backend` — `jit`-, `grad`-, and `vmap`-compatible functional predict, using `lax.scan` for the recurrence.
-- **ROS2**: a standalone `ament_python` package ([`ros2_ws/src/fracmem_ros2`](ros2_ws/src/fracmem_ros2)) that streams a topic through a fitted filter.
 - **ESP32 / MicroPython**: `fracmem.embedded` exports a fitted filter as a dependency-free, single-file MicroPython runtime — no numpy/scipy on the device, fixed RAM.
 
 ### Derivative definitions
@@ -136,7 +120,7 @@ for x_k in live_signal:
     y_k = f.step(x_k)   # one sample in, one derivative estimate out
 ```
 
-Numerically identical to calling `.predict()` on the same signal in one batch; this is what the ROS2 node and the embedded runtime are checked against in tests.
+Numerically identical to calling `.predict()` on the same signal in one batch; this is what the embedded runtime is checked against in tests.
 
 ### Automatic parameter selection
 
@@ -157,53 +141,6 @@ lam, c, p_used, err = adaptive_soe_tail_kernel(alpha, L, w, j_max, tol=1e-4)
 ```
 
 Grows `p` (doubling from `p_min`) until the tail kernel's worst-case relative error against the exact GL tail is `<= tol`, instead of a fixed `p` chosen up front.
-
-### GPU / PyTorch
-
-```bash
-pip install fracmem[torch]
-```
-
-```python
-import torch
-from fracmem.backends.torch_backend import TorchFractionalLayer
-
-layer = TorchFractionalLayer(f, learnable_c=True).to("cuda")   # or "mps", or leave on CPU
-y_hat = layer(x)   # x: (T,) or (batch, T)
-```
-
-There's no separate GPU code path — moving the module with `.to(device)` runs every op, including the mode recurrence, on-device. `lambda` (the SOE decay rates) stays a fixed, non-learnable buffer; set `learnable_c=True` to fine-tune the linear readout end-to-end by backprop instead of the ridge-regression fit.
-
-### JAX
-
-```bash
-pip install fracmem[jax]
-```
-
-```python
-from fracmem.backends.jax_backend import predict, jit_predict
-
-y_hat = jit_predict(x, f.lam, f.c, w, f.alpha, f.h, f.L)
-grad_wrt_c = jax.grad(lambda c: predict(x, f.lam, c, w, f.alpha, f.h, f.L).sum())(f.c)
-```
-
-### ROS2
-
-A standalone `ament_python` package at [`ros2_ws/src/fracmem_ros2`](ros2_ws/src/fracmem_ros2). Fit and save a filter offline, then point the node at it:
-
-```python
-f.fit(train_signals)
-f.save("filter.npz")
-```
-
-```bash
-pip install fracmem   # into the ROS2 Python environment
-colcon build --packages-select fracmem_ros2
-source install/setup.bash
-ros2 run fracmem_ros2 derivative_node --ros-args -p filter_path:=/path/to/filter.npz
-```
-
-Subscribes `std_msgs/Float64` on `fracmem/input`, publishes the streamed derivative on `fracmem/output` (topic names configurable via the `input_topic`/`output_topic` parameters).
 
 ### ESP32 / MicroPython
 

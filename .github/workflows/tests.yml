@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  core:
-    name: core (py${{ matrix.python-version }})
+  test:
+    name: test (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,23 +28,6 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v
 
-  backends:
-    name: torch + jax backends (py3.12)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install fracmem with all extras
-        run: pip install -e ".[torch,jax,dev]"
-
-      - name: Run full test suite
-        run: pytest tests/ -v
-
       - name: Run examples
         run: |
           python examples/basic-usage.py
@@ -54,5 +37,3 @@ jobs:
           python examples/adaptive-soe.py
           python examples/save-and-load.py
           python examples/embedded-export.py
-          python examples/torch-backend.py
-          python examples/jax-backend.py

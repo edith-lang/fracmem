@@ -1,7 +1,7 @@
 """
-Feed a filter one sample at a time with .step() -- the same API a ROS2
-node or a live sensor loop would use -- and confirm it's numerically
-identical to calling .predict() on the whole signal at once.
+Feed a filter one sample at a time with .step() -- the same API a live
+sensor loop would use -- and confirm it's numerically identical to
+calling .predict() on the whole signal at once.
 
 Run:
     python examples/streaming.py

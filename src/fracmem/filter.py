@@ -172,10 +172,9 @@ class CompressedFractionalFilter:
         return local + tail
 
     # ---- streaming (O(L+p) per sample, fixed memory) ----------------
-    # Same math as predict(), one sample at a time. This is what a
-    # ROS2 node or any other online consumer should call; it is also
-    # the reference the embedded (MicroPython) runtime is checked
-    # against in tests.
+    # Same math as predict(), one sample at a time. This is what any
+    # online consumer should call; it is also the reference the
+    # embedded (MicroPython) runtime is checked against in tests.
     def reset_stream(self, w: np.ndarray = None):
         if self.lam is None or self.c is None:
             raise RuntimeError("call .fit(...) before streaming")
