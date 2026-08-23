@@ -154,6 +154,69 @@ class CompressedFractionalFilter:
         self.reg_used = best_reg
         return self
 
+    # ---- build a filter with zero training data -----------------------
+    @classmethod
+    def from_analytic(cls, alpha: float, h: float, L: int = 32, p: int = 16,
+                       definition: str = "gl", j_max: int = None,
+                       tail_fit_points: int = 400, tail_fit_reg: float = 0.1) -> "CompressedFractionalFilter":
+        """Build a fully working, ready-to-deploy filter using ONLY exact
+        math -- no .fit(), no example signals, nothing collected from a
+        real device. Both lambda (the decay rates) and c (the combination
+        weights) come straight from the certified SOE construction in
+        soe.py, so the worst-case error is knowable in advance (see
+        soe.soe_tail_error). Use this when you want to flash a filter
+        straight to a device before you have any real training data, or
+        just want the plain classical construction with nothing fit to
+        signals at all.
+
+        tail_fit_points: how many points along the tail are checked while
+        fitting c to the exact kernel -- higher means a slightly more
+        careful fit at a one-time design cost, lower means a faster,
+        rougher fit. Default 400, same as the rest of the library.
+        tail_fit_reg: how strongly that fit is discouraged from picking
+        extreme-sized weights. Default 0.1, same as the rest of the
+        library. Unlike .fit(), these two numbers are not overwritten by
+        anything afterward -- they are the actual knobs controlling the
+        filter you get back.
+
+        j_max: how far into the past (in samples) the design accounts
+        for. Defaults to max(2000, 100*L) if not given -- far enough to
+        cover realistic signal lengths without you having to pick a
+        number yourself.
+
+        Once built, this filter is used exactly like a .fit()-ted one:
+        .predict(...), .step(...), .save(...), and the MicroPython
+        export all work unchanged.
+
+        Accuracy warning: soe_tail_error's certified bound is about how
+        closely c*lambda^m matches the exact kernel weights themselves,
+        pointwise -- it is NOT a bound on end-to-end prediction error for
+        every possible signal. On a signal with strong long-range drift
+        (e.g. a long random walk), even a kernel that matches pointwise
+        to a fraction of a percent can accumulate a much larger error
+        over thousands of samples, because that class of signal is
+        unusually sensitive to the kernel's long-memory tail. This is
+        exactly the gap .fit() closes: fitting c against real training
+        signals (rather than against the abstract kernel alone) directly
+        minimizes end-to-end error on the kind of signal you actually
+        care about. Prefer .fit() whenever you have even a handful of
+        representative training signals; reach for from_analytic() only
+        when you genuinely have none yet, and validate its accuracy on
+        a real signal before trusting it long-term.
+
+        Example
+        -------
+        >>> f = CompressedFractionalFilter.from_analytic(alpha=0.5, h=0.01, L=32, p=16)
+        >>> y_hat = f.predict(some_signal)   # no training signals needed anywhere
+        """
+        if j_max is None:
+            j_max = max(2000, 100 * L)
+        f = cls(alpha=alpha, h=h, L=L, p=p, definition=definition)
+        w = gl_weights(alpha, j_max + 1)
+        f.lam, f.c = soe_tail_kernel(alpha, L, p, w, j_max,
+                                      tail_fit_points=tail_fit_points, tail_fit_reg=tail_fit_reg)
+        return f
+
     def predict(self, x: np.ndarray, w: np.ndarray = None) -> np.ndarray:
         """Deploy. Identical cost to the pure classical filter: L+p
         multiply-adds per sample, p persistent state values.

@@ -53,14 +53,23 @@ def soe_refit_weights(alpha: float, L: int, w: np.ndarray, lam: np.ndarray, j_ma
     return c
 
 
-def soe_tail_kernel(alpha: float, L: int, p: int, w: np.ndarray, j_max: int):
+def soe_tail_kernel(alpha: float, L: int, p: int, w: np.ndarray, j_max: int,
+                     tail_fit_points: int = 400, tail_fit_reg: float = 0.1):
     """Full classical construction: decay rates from quadrature, weights
     refit to the exact kernel. On its own, (lambda, c) here is the
     certified classical filter (carries the formal error bound derived
-    in the theory document) -- zero data required."""
+    in the theory document) -- zero data required.
+
+    tail_fit_points: how many points along the tail get checked when
+    fitting c against the exact kernel (see soe_refit_weights). More
+    points means a more thorough, slightly slower one-time fit; 400 is
+    the library's own long-standing default. tail_fit_reg: how strongly
+    that fit is discouraged from picking extreme-sized weights (also
+    passed straight to soe_refit_weights)."""
     m_max = j_max - L
     lam, _c0 = soe_nodes_and_weights(alpha, L, m_max, p)
-    c = soe_refit_weights(alpha, L, w, lam, j_max)
+    c = soe_refit_weights(alpha, L, w, lam, j_max,
+                           n_samples=tail_fit_points, reg=tail_fit_reg)
     return lam, c
 
 
@@ -80,15 +89,19 @@ def soe_tail_error(alpha: float, L: int, w: np.ndarray, lam: np.ndarray, c: np.n
 
 
 def adaptive_soe_tail_kernel(alpha: float, L: int, w: np.ndarray, j_max: int,
-                              tol: float = 1e-3, p_min: int = 4, p_max: int = 64):
+                              tol: float = 1e-3, p_min: int = 4, p_max: int = 64,
+                              tail_fit_points: int = 400, tail_fit_reg: float = 0.1):
     """Like soe_tail_kernel, but chooses the mode count p for you: starts
     at p_min and doubles until the worst-case relative tail error (see
     soe_tail_error) is <= tol or p_max is reached. Trades a slightly
     slower design step for not having to hand-pick p per alpha/L/budget.
-    Returns (lambda, c, p_used, achieved_err)."""
+    tail_fit_points, tail_fit_reg: same meaning as in soe_tail_kernel,
+    forwarded unchanged at every p tried. Returns
+    (lambda, c, p_used, achieved_err)."""
     p = min(p_min, p_max)
     while True:
-        lam, c = soe_tail_kernel(alpha, L, p, w, j_max)
+        lam, c = soe_tail_kernel(alpha, L, p, w, j_max,
+                                  tail_fit_points=tail_fit_points, tail_fit_reg=tail_fit_reg)
         err = soe_tail_error(alpha, L, w, lam, c, j_max)
         if err <= tol or p >= p_max:
             return lam, c, p, err
