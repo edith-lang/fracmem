@@ -27,10 +27,7 @@ The only dependencies are `numpy` and `scipy`, kept deliberately light since the
 
 | Doc | What's in it |
 |---|---|
-| [`docs/theory.pdf`](docs/theory.pdf) | Full derivation and proofs, from the definition of a fractional derivative up to the certified error bound. |
-| [`docs/FracmemArchitecture.pdf`](docs/FracmemArchitecture.pdf) | How the method maps onto the actual source code, file by file, with a hand-traceable worked example. |
-| [`docs/WhySoeWorks.pdf`](docs/WhySoeWorks.pdf) | A focused walkthrough of the one identity the whole method rests on (why exponentials, why log-spacing, why it's certifiable). |
-| [`docs/SoeVsBruteForce.pdf`](docs/SoeVsBruteForce.pdf) | Slide deck of the GPU benchmark below, with the full experiment narrative. |
+| [`docs/FracmemGuide.pdf`](docs/FracmemGuide.pdf) | Everything in one place, plain language: the problem, why the method works (with a short real proof), a hand-checkable example, how to use the library, and real results. Start here. |
 | [`docs/slides/fracmem.pdf`](docs/slides/fracmem.pdf) | General technical overview slides. |
 | [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) | Five-test accuracy/speed sweep against a hand-verified GPU exact reference, fully reproducible. |
 
@@ -54,7 +51,7 @@ fracmem handles this in three steps.
 
 The deployed filter is `p` independent one line recursions plus the `L` term local window: `O(L+p)` compute and `O(p)` memory per sample, independent of signal length. Because the decay rates come from a proven identity rather than a data fit, the tail's worst case error against the exact kernel can also be bounded and computed offline, before the filter ever sees a signal.
 
-Full derivations and proofs, including the offline error bound, are in [`docs/theory.pdf`](docs/theory.pdf). How that maps onto the actual source files is in [`docs/FracmemArchitecture.pdf`](docs/FracmemArchitecture.pdf).
+The full derivation, kept simple, is in [`docs/FracmemGuide.pdf`](docs/FracmemGuide.pdf).
 
 ### Derivative definitions
 

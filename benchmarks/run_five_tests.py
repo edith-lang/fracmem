@@ -4,11 +4,11 @@ trade-off actually move as you change ONE thing -- how long the
 training signals are -- while everything else (test signal, alpha, L,
 p, seed) stays fixed?
 
-Round 1/Round 2 of the earlier benchmark (see SoeVsBruteForce.pdf) only
-gave two points on this curve (50,000 and 500,000-sample training
-signals). This script fills in five points, log-spaced from a very
-short training signal to a fairly long one, all measured against the
-SAME real GPU-computed exact answer, on the SAME real machine.
+An earlier round of testing only gave two points on this curve (50,000
+and 500,000-sample training signals). This script fills in five points,
+log-spaced from a very short training signal to a fairly long one, all
+measured against the SAME real GPU-computed exact answer, on the SAME
+real machine.
 
 What happens, once, for the whole sweep:
   1. Generate ONE test signal (a 5,000,000-sample random walk).
@@ -28,8 +28,7 @@ What happens, once per test (5 times):
 
 Everything reported is a real, measured number from this run -- fit
 time, predict time, compile+run time, and the achieved accuracy. See
-BENCHMARKS.md for the write-up and SoeVsBruteForce.tex for the slide
-version of the results.
+BENCHMARKS.md for the full write-up.
 
 Run with the project's own fracmem installed, plus torch (any CUDA
 build) and matplotlib:

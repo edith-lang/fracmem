@@ -1,6 +1,6 @@
 """
-Turns results/five_tests.json into the two figures used in
-SoeVsBruteForce.pdf and BENCHMARKS.md:
+Turns results/five_tests.json into the figures used in BENCHMARKS.md
+and docs/FracmemGuide.pdf:
   results/accuracy_vs_train_length.png
   results/speed_comparison.png
 

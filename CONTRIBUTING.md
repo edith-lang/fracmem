@@ -19,25 +19,25 @@ pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
-All new code should come with a test. If you're fixing a bug, add a test that fails without your fix and passes with it — this project's own development history (see `docs/theory.pdf` and `docs/FracmemArchitecture.pdf`) leaned hard on catching bugs via verification rather than by inspection, and contributions should keep that standard.
+All new code should come with a test. If you're fixing a bug, add a test that fails without your fix and passes with it — this project's own development history (see `docs/FracmemGuide.pdf`) leaned hard on catching bugs via verification rather than by inspection, and contributions should keep that standard.
 
 ## What's especially welcome
 
 - **Real hardware validation reports** on new platforms (this library was developed and checked on desktop Python and a Raspberry Pi; reports from other microcontrollers/SBCs are valuable).
-- **Extending the certificate** (`docs/theory.pdf`, Theorem 4.1) to cover configurations not yet analyzed.
+- **Extending the certificate** (`docs/FracmemGuide.pdf`, §3.4 "The guarantee") to cover configurations not yet analyzed.
 - **Additional fractional orders / sample rates** exercised in the test suite.
 - **Bug reports with a minimal reproduction** — a short script showing `alpha`, `h`, `L`, `p`, and the unexpected output is far more useful than a description alone.
 
 ## What to avoid
 
-- Don't re-fit the decay rates (`lambda`) from data anywhere in the core library — this is a deliberate design decision with a mathematical justification (see `docs/theory.pdf`, §10), not an oversight. If you think you have a case where it helps, please open an issue with data before sending a PR that changes it.
+- Don't re-fit the decay rates (`lambda`) from data anywhere in the core library — this is a deliberate design decision with a mathematical justification (see `docs/FracmemGuide.pdf`, §3.5 "Why only one half gets touched by data"), not an oversight. If you think you have a case where it helps, please open an issue with data before sending a PR that changes it.
 - Don't add heavyweight dependencies. The library's whole value proposition includes being embeddable and lightweight; it currently depends on nothing but `numpy` and `scipy`.
 
 ## Pull requests
 
 1. Fork, branch, make your change with tests.
 2. `pytest tests/ -v` must pass.
-3. Open a PR describing *why*, not just *what* — especially for anything touching the core fitting logic, since the reasoning behind the current design is usually non-obvious and documented in `docs/theory.pdf`.
+3. Open a PR describing *why*, not just *what* — especially for anything touching the core fitting logic, since the reasoning behind the current design is usually non-obvious and documented in `docs/FracmemGuide.pdf`.
 
 ## Code of conduct
 

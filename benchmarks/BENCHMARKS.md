@@ -13,7 +13,7 @@ directory — nothing here is estimated, extrapolated, or simulated.
 
 ## Why five tests, and why a new suite at all
 
-An earlier round of testing (see `../../SoeVsBruteForce.pdf`, "Round 1" / "Round 2")
+An earlier round of testing ("Round 1" / "Round 2")
 compared `fracmem` against an honest, non-FFT, GPU-computed exact fractional
 derivative at two training lengths (50,000 and 500,000 samples), on a 49.8-million
 sample test signal. Two points are enough to notice a trend, not enough to see its
