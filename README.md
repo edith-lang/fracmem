@@ -28,7 +28,6 @@ The only dependencies are `numpy` and `scipy`, kept deliberately light since the
 | Doc | What's in it |
 |---|---|
 | [`docs/FracmemGuide.pdf`](docs/FracmemGuide.pdf) | Everything in one place, plain language: the problem, why the method works (with a short real proof), a hand-checkable example, how to use the library, and real results. Start here. |
-| [`docs/slides/fracmem.pdf`](docs/slides/fracmem.pdf) | General technical overview slides. |
 | [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) | Five-test accuracy/speed sweep against a hand-verified GPU exact reference, fully reproducible. |
 
 ## The idea
