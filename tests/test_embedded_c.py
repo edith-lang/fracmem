@@ -1,8 +1,7 @@
 """
 Compiles the plain-C runtime (fracmemfilter.c) with a small test driver
 and checks it produces the same numbers as CompressedFractionalFilter's
-own Python .predict() -- the same check test_embedded.py does for the
-MicroPython runtime, just for the C one.
+own Python .predict().
 
 Skips (instead of failing) if no C compiler is available.
 """

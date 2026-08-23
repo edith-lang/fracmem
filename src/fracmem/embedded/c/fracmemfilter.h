@@ -2,13 +2,11 @@
  * fracmemfilter.h -- zero-dependency streaming fractional-derivative
  * filter for microcontrollers, plain C version.
  *
- * This is the C twin of fracmem/embedded/runtime.py's MicroFractionalFilter:
- * same recursion, same fixed memory, same O(L+p) work per sample. It only
- * APPLIES an already-fitted filter (the exact L local weights w, the
- * decay rates lam, and the combination weights c) -- fitting stays on a
- * laptop, in Python, where numpy/scipy are available. Use
- * fracmem.embedded.exportc to bake a fitted filter's numbers into a
- * ready-to-compile .c file that calls fracmemInit for you.
+ * This runtime only APPLIES an already-fitted filter (the exact L local
+ * weights w, the decay rates lam, and the combination weights c) --
+ * fitting stays on a laptop, in Python, where numpy/scipy are
+ * available. Use fracmem.embedded.export_c to bake a fitted filter's
+ * numbers into a ready-to-compile .c file that calls fracmemInit for you.
  *
  * No malloc anywhere: every array below has a fixed maximum size, so
  * this filter uses a fixed, known amount of RAM, however long the

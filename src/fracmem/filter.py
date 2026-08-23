@@ -185,7 +185,7 @@ class CompressedFractionalFilter:
         number yourself.
 
         Once built, this filter is used exactly like a .fit()-ted one:
-        .predict(...), .step(...), .save(...), and the MicroPython
+        .predict(...), .step(...), .save(...), and the embedded C
         export all work unchanged.
 
         Accuracy warning: soe_tail_error's certified bound is about how
@@ -237,7 +237,7 @@ class CompressedFractionalFilter:
     # ---- streaming (O(L+p) per sample, fixed memory) ----------------
     # Same math as predict(), one sample at a time. This is what any
     # online consumer should call; it is also the reference the
-    # embedded (MicroPython) runtime is checked against in tests.
+    # embedded C runtime is checked against in tests.
     def reset_stream(self, w: np.ndarray = None):
         if self.lam is None or self.c is None:
             raise RuntimeError("call .fit(...) before streaming")
