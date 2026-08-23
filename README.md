@@ -3,7 +3,13 @@
 [![Tests](https://github.com/edith-lang/fracmem/actions/workflows/tests.yml/badge.svg)](https://github.com/edith-lang/fracmem/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-fracmem turns a fractional order derivative, which normally needs the entire signal history to compute, into a fixed size recursive filter: constant compute and constant memory per sample, forever. It is built for fractional order PID control, viscoelastic material models, battery impedance models, and any other setting where fractional order dynamics meet an embedded or real time budget.
+fracmem turns a fractional order derivative, which normally needs the entire signal history to compute, into a fixed size recursive filter: constant compute and constant memory per sample, forever.
+
+## The challenge
+
+A "half derivative" or other fractional-order derivative shows up naturally in a few real engineering problems: fractional-order PID controllers (better disturbance rejection than plain PID for some flexible/aerodynamic systems), battery state-of-charge and impedance models, and materials that "remember" how they were stressed long ago (viscoelastic damping). Computing one exactly requires **the entire signal history, forever** -- every past reading keeps contributing to today's answer, no matter how long the system has been running.
+
+On a desktop that's just slow. On an embedded device -- a microcontroller running a control loop, a battery-management chip, a sensor logging for months or years -- it's not implementable at all: memory and CPU are fixed, but the exact computation's cost keeps growing. fracmem exists to close that gap: fit a small filter once (on a laptop, in Python), then deploy it to run forever on constant memory and constant compute per sample -- cheap enough for a real microcontroller, accurate enough to certify offline before it ever sees real data.
 
 ## Install
 
