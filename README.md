@@ -21,14 +21,7 @@ pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
-The only dependencies are `numpy` and `scipy`, kept deliberately light since the whole point is to be embeddable.
-
-## Documentation
-
-| Doc | What's in it |
-|---|---|
-| [`docs/FracmemGuide.pdf`](docs/FracmemGuide.pdf) | Everything in one place, plain language: the problem, why the method works (with a short real proof), a hand-checkable example, how to use the library, and real results. Start here. |
-| [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) | Five-test accuracy/speed sweep against a hand-verified GPU exact reference, fully reproducible. |
+The only dependencies are `numpy` and `scipy`, kept deliberately light since the whole point is to be embeddable. Deploying to a real device needs nothing but a C compiler -- see [Embedded C export](#embedded-c-export) below.
 
 ## The idea
 
@@ -49,8 +42,6 @@ fracmem handles this in three steps.
 **Refine the readout weights with a little data.** The `p` exponential modes, plus the exact local window, are combined into a derivative estimate through linear weights `c`. Those weights are fit with a handful of representative training signals using cross validated ridge regression, a small, convex, well posed least squares problem, quite unlike the poorly posed problem of trying to refit the decay rates themselves.
 
 The deployed filter is `p` independent one line recursions plus the `L` term local window: `O(L+p)` compute and `O(p)` memory per sample, independent of signal length. Because the decay rates come from a proven identity rather than a data fit, the tail's worst case error against the exact kernel can also be bounded and computed offline, before the filter ever sees a signal.
-
-The full derivation, kept simple, is in [`docs/FracmemGuide.pdf`](docs/FracmemGuide.pdf).
 
 ### Derivative definitions
 
@@ -118,31 +109,36 @@ print(f.L, f.p, f.auto_rmse_)
 
 Reproduce with `python examples/auto-params.py`.
 
-For a large-scale, GPU-verified benchmark -- five real tests sweeping training-signal
-length against a hand-verified, non-FFT exact reference on a 5,000,000-sample signal,
-including a genuine float32-vs-float64 drift finding in the compiled C export -- see
-[`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md).
-
 ## Features
 
 - **Derivative definitions**: Grunwald Letnikov / Riemann Liouville (the default) and Caputo.
 - **Streaming**: an `O(L+p)` per sample `.step()` call for online use, alongside batch `.predict()`.
 - **Adaptive tail construction**: grow the number of exponential modes automatically until a target error tolerance is met, instead of hand picking `p`.
 - **Automatic parameter selection**: `CompressedFractionalFilter.auto(...)` searches `(L, p)` for the cheapest filter meeting a target RMSE.
-- **ESP32 / MicroPython export**: `fracmem.embedded` exports a fitted filter as a single, standalone MicroPython file with no external dependencies and fixed RAM use.
+
+### Embedded C export
+
+Fit on a laptop, deploy to any C/C++ embedded toolchain (ESP-IDF, Arduino, bare-metal). `fracmem.embedded.export_c` bakes a fitted filter's constants into a small `.c` file; ship it alongside the fixed runtime `fracmemfilter.h`/`.c` (also in this repo), no other dependency:
 
 ```python
-from fracmem.embedded import export_micropython
+from fracmem.embedded import export_c
 
 f.fit(train_signals)
-export_micropython(f, "device.py")
+export_c(f, "device_filter.c")
 ```
 
-```bash
-mpremote cp device.py :main.py   # flash to an ESP32 running MicroPython
+```c
+#include "fracmemfilter.h"
+extern FracmemFilter filt;
+void filtSetup(void);
+
+filtSetup();
+float y = fracmemStep(&filt, x_k);   /* one sample in, one derivative estimate out */
 ```
 
-See [`examples/`](examples/) for a runnable script covering each feature above, including streaming, adaptive tail construction, automatic parameters, saving and loading a fitted filter, and the embedded export.
+`fracmemStep` does exactly `L + p` multiply-adds and touches `p` stored floats -- no heap allocation, no growth, ever. See [`examples/embedded-export-c.py`](examples/embedded-export-c.py) for the full round trip (fit, export, compile, run, verify against Python).
+
+See [`examples/`](examples/) for a runnable script covering each feature above.
 
 ## Background
 

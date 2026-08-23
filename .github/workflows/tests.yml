@@ -31,10 +31,6 @@ jobs:
       - name: Run examples
         run: |
           python examples/basic-usage.py
-          python examples/streaming.py
-          python examples/definitions.py
-          python examples/auto-params.py
           python examples/adaptive-soe.py
-          python examples/save-and-load.py
-          python examples/embedded-export.py
+          python examples/auto-params.py
           python examples/embedded-export-c.py

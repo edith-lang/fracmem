@@ -8,9 +8,8 @@ Two things this example shows:
 
 2. fracmem.embedded.export_c(...) -- bake that filter's constants into
    a small, ready-to-compile .c file for the plain-C runtime
-   (fracmem/embedded/c/fracmemfilter.h + fracmemfilter.c), the version
-   meant for a real embedded C/C++ toolchain (ESP-IDF, Arduino, or a
-   ROS2 C++ node) instead of MicroPython.
+   (fracmem/embedded/c/fracmemfilter.h + fracmemfilter.c), meant for
+   any real embedded C/C++ toolchain (ESP-IDF, Arduino, bare-metal).
 
 Run:
     python examples/embedded-export-c.py

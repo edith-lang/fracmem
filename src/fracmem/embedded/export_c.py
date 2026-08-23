@@ -3,12 +3,10 @@ Desktop-side exporter: bakes a fitted CompressedFractionalFilter's
 constants into a small, ready-to-compile .c file for the plain-C
 runtime (fracmemfilter.h / fracmemfilter.c, in embedded/c/).
 
-Unlike export_micropython (which copies the whole runtime source into
-every exported file, since MicroPython flashes a single .py at a
-time), a C project is normally built from several files together, so
-this only generates the small file of *constants*. Ship
-fracmemfilter.h and fracmemfilter.c alongside it once, unchanged, no
-matter how many filters you export.
+A C project is normally built from several files together, so this
+only generates the small file of *constants*. Ship fracmemfilter.h and
+fracmemfilter.c alongside it once, unchanged, no matter how many
+filters you export.
 
     fracmem.embedded.export_c(fitted_filter, "device_filter.c")
     # then compile device_filter.c + fracmemfilter.c into your project
