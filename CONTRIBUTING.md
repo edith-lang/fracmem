@@ -19,7 +19,7 @@ pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
-All new code should come with a test. If you're fixing a bug, add a test that fails without your fix and passes with it — this project's own development history (see `docs/theory.pdf` and `docs/code_walkthrough.pdf`) leaned hard on catching bugs via verification rather than by inspection, and contributions should keep that standard.
+All new code should come with a test. If you're fixing a bug, add a test that fails without your fix and passes with it — this project's own development history (see `docs/theory.pdf` and `docs/FracmemArchitecture.pdf`) leaned hard on catching bugs via verification rather than by inspection, and contributions should keep that standard.
 
 ## What's especially welcome
 

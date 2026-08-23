@@ -23,6 +23,17 @@ pytest tests/ -v
 
 The only dependencies are `numpy` and `scipy`, kept deliberately light since the whole point is to be embeddable.
 
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [`docs/theory.pdf`](docs/theory.pdf) | Full derivation and proofs, from the definition of a fractional derivative up to the certified error bound. |
+| [`docs/FracmemArchitecture.pdf`](docs/FracmemArchitecture.pdf) | How the method maps onto the actual source code, file by file, with a hand-traceable worked example. |
+| [`docs/WhySoeWorks.pdf`](docs/WhySoeWorks.pdf) | A focused walkthrough of the one identity the whole method rests on (why exponentials, why log-spacing, why it's certifiable). |
+| [`docs/SoeVsBruteForce.pdf`](docs/SoeVsBruteForce.pdf) | Slide deck of the GPU benchmark below, with the full experiment narrative. |
+| [`docs/slides/fracmem.pdf`](docs/slides/fracmem.pdf) | General technical overview slides. |
+| [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) | Five-test accuracy/speed sweep against a hand-verified GPU exact reference, fully reproducible. |
+
 ## The idea
 
 The Grunwald Letnikov definition of a fractional derivative of order alpha is a weighted sum over the entire past of the signal:
@@ -43,7 +54,7 @@ fracmem handles this in three steps.
 
 The deployed filter is `p` independent one line recursions plus the `L` term local window: `O(L+p)` compute and `O(p)` memory per sample, independent of signal length. Because the decay rates come from a proven identity rather than a data fit, the tail's worst case error against the exact kernel can also be bounded and computed offline, before the filter ever sees a signal.
 
-Full derivations and proofs, including the offline error bound, are in [`docs/theory.pdf`](docs/theory.pdf). A line by line explanation of the code is in [`docs/code_walkthrough.pdf`](docs/code_walkthrough.pdf).
+Full derivations and proofs, including the offline error bound, are in [`docs/theory.pdf`](docs/theory.pdf). How that maps onto the actual source files is in [`docs/FracmemArchitecture.pdf`](docs/FracmemArchitecture.pdf).
 
 ### Derivative definitions
 
@@ -110,6 +121,11 @@ print(f.L, f.p, f.auto_rmse_)
 ```
 
 Reproduce with `python examples/auto-params.py`.
+
+For a large-scale, GPU-verified benchmark -- five real tests sweeping training-signal
+length against a hand-verified, non-FFT exact reference on a 5,000,000-sample signal,
+including a genuine float32-vs-float64 drift finding in the compiled C export -- see
+[`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md).
 
 ## Features
 
