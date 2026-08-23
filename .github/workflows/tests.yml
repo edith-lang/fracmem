@@ -37,3 +37,4 @@ jobs:
           python examples/adaptive-soe.py
           python examples/save-and-load.py
           python examples/embedded-export.py
+          python examples/embedded-export-c.py
