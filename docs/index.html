@@ -1,0 +1,1554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>fracmem docs</title>
+<meta name="description" content="Documentation for fracmem: fractional-order derivative filters with constant memory, fitted in Python and deployed as plain C.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: developer-docs shell. Fixed top bar, left nav tree, reading column, right "on this page" rail. */
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f7f7f8;
+  --bg-code: #f6f7f9;
+  --fg: #1d1f20;
+  --fg-muted: #595f66;
+  --fg-faint: #858b92;
+  --line: #e4e6e9;
+  --line-strong: #cfd3d8;
+  --accent: #f6821f;        /* orange: brand, active nav, primary buttons */
+  --accent-strong: #c75a00;
+  --accent-soft: #fff1e5;
+  --link: #0051c3;
+  --link-hover: #003d93;
+  --note: #0051c3;  --note-bg: #eef4fd;
+  --tip: #12805c;   --tip-bg: #ebf7f2;
+  --warn: #a35a00;  --warn-bg: #fff6e8;
+  --danger: #c4231b; --danger-bg: #fdeeed;
+  --tk-kw: #a6266e; --tk-str: #1b7a3e; --tk-com: #7b8590; --tk-num: #b35c00; --tk-fn: #2253b8; --tk-pre: #7a3fb8;
+  --shadow: 0 8px 28px rgba(20, 24, 31, .12);
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --header-h: 60px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181a; --bg-soft: #1e2023; --bg-code: #1f2124;
+    --fg: #e8eaed; --fg-muted: #a9afb6; --fg-faint: #7d838a;
+    --line: #2e3135; --line-strong: #3d4146;
+    --accent: #f6821f; --accent-strong: #ff9a45; --accent-soft: #3a2614;
+    --link: #79aaff; --link-hover: #a5c6ff;
+    --note: #79aaff; --note-bg: #1a2436;
+    --tip: #4fcf9a; --tip-bg: #15291f;
+    --warn: #f5b04a; --warn-bg: #2e2312;
+    --danger: #ff7b72; --danger-bg: #331a19;
+    --tk-kw: #ff7ab8; --tk-str: #8bd49c; --tk-com: #7d858e; --tk-num: #f5a35b; --tk-fn: #82b1ff; --tk-pre: #c39bff;
+    --shadow: 0 8px 28px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17181a; --bg-soft: #1e2023; --bg-code: #1f2124;
+  --fg: #e8eaed; --fg-muted: #a9afb6; --fg-faint: #7d838a;
+  --line: #2e3135; --line-strong: #3d4146;
+  --accent: #f6821f; --accent-strong: #ff9a45; --accent-soft: #3a2614;
+  --link: #79aaff; --link-hover: #a5c6ff;
+  --note: #79aaff; --note-bg: #1a2436;
+  --tip: #4fcf9a; --tip-bg: #15291f;
+  --warn: #f5b04a; --warn-bg: #2e2312;
+  --danger: #ff7b72; --danger-bg: #331a19;
+  --tk-kw: #ff7ab8; --tk-str: #8bd49c; --tk-com: #7d858e; --tk-num: #f5a35b; --tk-fn: #82b1ff; --tk-pre: #c39bff;
+  --shadow: 0 8px 28px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--header-h) + 24px); }
+body { background: var(--bg); color: var(--fg); font: 15px/1.7 var(--font-body); -webkit-font-smoothing: antialiased; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* ---------- header ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  height: var(--header-h); display: flex; align-items: center; gap: 16px;
+  padding-inline: 20px; background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; color: var(--fg); font-weight: 600; font-size: 16px; white-space: nowrap; }
+.brand:hover { text-decoration: none; color: var(--fg); }
+.brand-mark { width: 30px; height: 30px; border-radius: 7px; background: var(--accent); color: #fff; display: grid; place-items: center; font: 600 13px/1 var(--font-mono); letter-spacing: -.5px; }
+.brand small { font-weight: 400; color: var(--fg-muted); font-size: 15px; }
+.ver { font: 500 11px/1 var(--font-mono); color: var(--fg-muted); border: 1px solid var(--line-strong); border-radius: 99px; padding: 4px 8px; }
+.search-wrap { position: relative; flex: 1; max-width: 460px; margin-inline: auto; }
+.search { width: 100%; height: 38px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--bg-soft); color: var(--fg); padding: 0 64px 0 36px; font: inherit; font-size: 14px; }
+.search:focus { outline: none; border-color: var(--accent); background: var(--bg); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-ic { position: absolute; left: 11px; top: 11px; width: 16px; height: 16px; color: var(--fg-faint); pointer-events: none; }
+.kbd { position: absolute; right: 9px; top: 9px; font: 500 11px/1 var(--font-mono); color: var(--fg-faint); border: 1px solid var(--line-strong); border-radius: 5px; padding: 4px 6px; background: var(--bg); pointer-events: none; }
+.results { position: absolute; top: 44px; left: 0; right: 0; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: var(--shadow); max-height: 60vh; overflow: auto; padding: 6px; }
+.results a { display: block; padding: 8px 10px; border-radius: 6px; color: var(--fg); }
+.results a:hover, .results a.sel { background: var(--accent-soft); text-decoration: none; }
+.results .r-t { font-weight: 600; font-size: 14px; }
+.results .r-g { color: var(--fg-faint); font-size: 12px; margin-left: 6px; }
+.results .r-s { color: var(--fg-muted); font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.results mark { background: var(--accent-soft); color: var(--accent-strong); border-radius: 2px; }
+.results .empty { padding: 10px; color: var(--fg-muted); font-size: 14px; }
+.top-links { display: flex; align-items: center; gap: 6px; }
+.icon-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border-radius: 8px; color: var(--fg-muted); background: none; border: 0; font: inherit; font-size: 14px; cursor: pointer; }
+.icon-btn:hover { background: var(--bg-soft); color: var(--fg); text-decoration: none; }
+.icon-btn svg { width: 18px; height: 18px; }
+.menu-btn { display: none; }
+
+/* ---------- shell ---------- */
+.shell { display: grid; grid-template-columns: 280px minmax(0, 1fr) 230px; max-width: 1480px; margin-inline: auto; }
+.sidebar { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px)); height: calc(100vh - var(--header-h)); overflow-y: auto; border-right: 1px solid var(--line); padding: 20px 14px 40px 20px; font-size: 14px; }
+.nav-group { margin-bottom: 6px; }
+.nav-group > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 6px; font-weight: 600; color: var(--fg); }
+.nav-group > summary::-webkit-details-marker { display: none; }
+.nav-group > summary:hover { background: var(--bg-soft); }
+.nav-group > summary svg { width: 14px; height: 14px; color: var(--fg-faint); transition: transform .15s; }
+.nav-group[open] > summary svg { transform: rotate(90deg); }
+.nav-group ul { list-style: none; margin: 2px 0 8px; padding: 0 0 0 10px; border-left: 1px solid var(--line); margin-left: 14px; }
+.nav-group li a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--fg-muted); }
+.nav-group li a:hover { color: var(--fg); background: var(--bg-soft); text-decoration: none; }
+.nav-group li a.active { color: var(--accent-strong); background: var(--accent-soft); font-weight: 500; }
+
+.main { min-width: 0; padding: 32px 48px 80px; }
+.content { max-width: 780px; }
+.toc { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px)); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 32px 20px; font-size: 13px; }
+.toc h4 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-faint); font-weight: 600; }
+.toc ul { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+.toc li a { display: block; padding: 4px 12px; color: var(--fg-muted); margin-left: -1px; border-left: 2px solid transparent; }
+.toc li a:hover { color: var(--fg); text-decoration: none; }
+.toc li a.on { color: var(--accent-strong); border-left-color: var(--accent); }
+.toc .toc-extra { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.toc .toc-extra a { color: var(--fg-muted); display: flex; align-items: center; gap: 6px; }
+.toc .toc-extra svg { width: 14px; height: 14px; }
+
+/* ---------- page typography ---------- */
+.crumbs { font-size: 13px; color: var(--fg-faint); margin-bottom: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.crumbs span + span::before { content: "/"; margin-right: 6px; color: var(--line-strong); }
+.page h1 { font-size: 34px; line-height: 1.2; letter-spacing: -.02em; margin: 0 0 10px; font-weight: 700; text-wrap: balance; }
+.page .lede { font-size: 17px; color: var(--fg-muted); margin: 0 0 28px; max-width: 64ch; }
+.page h2 { font-size: 23px; letter-spacing: -.01em; margin: 44px 0 12px; padding-top: 4px; font-weight: 650; text-wrap: balance; }
+.page h3 { font-size: 17px; margin: 28px 0 8px; font-weight: 600; }
+.page p, .page li { max-width: 72ch; }
+.page ul, .page ol { padding-left: 22px; }
+.page li { margin: 4px 0; }
+.page h2 .anchor, .page h3 .anchor { opacity: 0; margin-left: 6px; color: var(--fg-faint); font-weight: 400; }
+.page h2:hover .anchor, .page h3:hover .anchor { opacity: 1; }
+.page code:not(pre code) { font: 13px var(--font-mono); background: var(--bg-code); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
+.page hr { border: 0; border-top: 1px solid var(--line); margin: 36px 0; }
+
+/* code blocks */
+.code { position: relative; margin: 16px 0 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-code); overflow: hidden; }
+.code-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--line); font: 500 12px/1 var(--font-mono); color: var(--fg-muted); }
+.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font: 13px/1.65 var(--font-mono); tab-size: 4; }
+.code.output { background: var(--bg-soft); }
+.code.output pre { color: var(--fg-muted); }
+.copy { display: inline-flex; align-items: center; gap: 5px; font: 500 12px var(--font-body); color: var(--fg-muted); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.copy:hover { color: var(--fg); border-color: var(--line-strong); }
+.copy svg { width: 13px; height: 13px; }
+.tk-kw { color: var(--tk-kw); } .tk-str { color: var(--tk-str); } .tk-com { color: var(--tk-com); font-style: italic; }
+.tk-num { color: var(--tk-num); } .tk-fn { color: var(--tk-fn); } .tk-pre { color: var(--tk-pre); }
+
+/* callouts */
+.callout { display: flex; gap: 12px; border: 1px solid; border-left-width: 4px; border-radius: 8px; padding: 12px 16px; margin: 18px 0; font-size: 14.5px; }
+.callout svg { flex: none; width: 18px; height: 18px; margin-top: 3px; }
+.callout > div { min-width: 0; }
+.callout p { margin: 4px 0; }
+.callout strong.ct { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+.callout.note { border-color: var(--note); background: var(--note-bg); } .callout.note svg, .callout.note .ct { color: var(--note); }
+.callout.tip { border-color: var(--tip); background: var(--tip-bg); } .callout.tip svg, .callout.tip .ct { color: var(--tip); }
+.callout.warn { border-color: var(--warn); background: var(--warn-bg); } .callout.warn svg, .callout.warn .ct { color: var(--warn); }
+.callout.danger { border-color: var(--danger); background: var(--danger-bg); } .callout.danger svg, .callout.danger .ct { color: var(--danger); }
+
+/* tabs */
+.tabs { margin: 16px 0 20px; }
+.tab-list { display: flex; gap: 2px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab-list button { font: inherit; font-size: 14px; font-weight: 500; color: var(--fg-muted); background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -1px; }
+.tab-list button:hover { color: var(--fg); }
+.tab-list button[aria-selected="true"] { color: var(--accent-strong); border-bottom-color: var(--accent); }
+.tab-panel .code { margin-top: 12px; }
+
+/* steps: a real numbered sequence */
+.steps { list-style: none; counter-reset: step; padding: 0 !important; margin: 20px 0; }
+.steps > li { counter-increment: step; position: relative; padding: 0 0 22px 46px; margin: 0; max-width: none; }
+.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--bg-soft); border: 1px solid var(--line-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-body); color: var(--fg); }
+.steps > li::after { content: ""; position: absolute; left: 15px; top: 36px; bottom: 6px; width: 1px; background: var(--line); }
+.steps > li:last-child::after { display: none; }
+.steps > li > .step-t { font-weight: 600; font-size: 16px; display: block; line-height: 30px; margin-bottom: 4px; }
+
+/* tables */
+.table-wrap { overflow-x: auto; margin: 16px 0 22px; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--bg-soft); font-weight: 600; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 13px; }
+td code { white-space: nowrap; }
+
+/* cards (overview) */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 20px 0 8px; }
+.card { display: block; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; color: var(--fg); background: var(--bg); transition: border-color .15s, box-shadow .15s; }
+.card:hover { border-color: var(--accent); box-shadow: 0 2px 10px rgba(246, 130, 31, .12); text-decoration: none; color: var(--fg); }
+.card .c-t { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card .c-t svg { width: 18px; height: 18px; color: var(--accent); }
+.card p { margin: 6px 0 0; color: var(--fg-muted); font-size: 14px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid var(--line); border-radius: 10px; margin: 20px 0; overflow: hidden; }
+.fact { padding: 14px 16px; border-right: 1px solid var(--line); }
+.fact:last-child { border-right: 0; }
+.fact b { display: block; font: 600 20px/1.3 var(--font-mono); font-variant-numeric: tabular-nums; }
+.fact span { font-size: 13px; color: var(--fg-muted); }
+
+/* hero button row */
+.btns { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 8px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 8px; font-weight: 500; font-size: 14px; border: 1px solid var(--line-strong); color: var(--fg); background: var(--bg); }
+.btn:hover { text-decoration: none; background: var(--bg-soft); color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1d1f20; }
+.btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+
+/* formulas + figures */
+.formula { font: 15px/1.9 "Cambria Math", "STIX Two Math", "Latin Modern Math", Georgia, serif; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 8px; padding: 12px 18px; margin: 14px 0; overflow-x: auto; white-space: nowrap; }
+.formula .lbl { font: 12px var(--font-body); color: var(--fg-faint); margin-left: 14px; }
+figure { margin: 20px 0 24px; }
+figure .fig { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--bg); overflow-x: auto; }
+figure svg { display: block; width: 100%; height: auto; min-width: 560px; }
+figcaption { font-size: 13px; color: var(--fg-muted); margin-top: 8px; }
+.sv-axis { stroke: var(--line-strong); } .sv-grid { stroke: var(--line); }
+.sv-text { fill: var(--fg-muted); font: 11px var(--font-body); } .sv-strong { fill: var(--fg); font: 600 12px var(--font-body); }
+.sv-mono { fill: var(--fg); font: 12px var(--font-mono); }
+.sv-acc { fill: var(--accent); } .sv-acc-soft { fill: var(--accent-soft); stroke: var(--accent); }
+.sv-blue { fill: var(--link); } .sv-blue-soft { fill: var(--note-bg); stroke: var(--note); }
+.sv-line-acc { stroke: var(--accent); fill: none; } .sv-line-blue { stroke: var(--link); fill: none; } .sv-line-muted { stroke: var(--fg-faint); fill: none; }
+.sv-box { fill: var(--bg-soft); stroke: var(--line-strong); }
+
+/* API signatures */
+.sig { font: 13.5px/1.6 var(--font-mono); background: var(--bg-code); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px; padding: 10px 14px; margin: 10px 0 12px; overflow-x: auto; white-space: pre; }
+.params { margin: 8px 0 18px; }
+.params dt { font: 500 13.5px var(--font-mono); margin-top: 10px; }
+.params dt em { font-style: normal; color: var(--fg-faint); font-weight: 400; }
+.params dd { margin: 2px 0 0 16px; color: var(--fg-muted); font-size: 14.5px; max-width: 70ch; }
+.badge { display: inline-block; font: 600 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: .05em; padding: 3px 7px; border-radius: 4px; vertical-align: 2px; margin-left: 6px; }
+.badge.m { background: var(--accent-soft); color: var(--accent-strong); }
+.badge.c { background: var(--note-bg); color: var(--note); }
+
+/* page footer */
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 56px; }
+.pager a { border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; color: var(--fg); display: block; }
+.pager a:hover { border-color: var(--accent); text-decoration: none; }
+.pager .lbl { font-size: 12px; color: var(--fg-faint); display: block; }
+.pager .t { font-weight: 600; color: var(--link); }
+.pager .next { text-align: right; grid-column: 2; }
+.page-foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--fg-faint); }
+.page-foot a { color: var(--fg-muted); display: inline-flex; gap: 6px; align-items: center; }
+.page-foot svg { width: 14px; height: 14px; }
+
+.page { display: none; }
+.page.shown { display: block; }
+.scrim { display: none; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1200px) {
+  .shell { grid-template-columns: 260px minmax(0, 1fr); }
+  .toc { display: none; }
+}
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .menu-btn { display: inline-flex; }
+  .sidebar { position: fixed; top: calc(var(--header-h) + env(safe-area-inset-top, 0px)); left: 0; bottom: 0; width: min(300px, 86vw); height: auto; z-index: 40; background: var(--bg); transform: translateX(-102%); transition: transform .2s; box-shadow: var(--shadow); }
+  body.nav-open .sidebar { transform: none; }
+  body.nav-open .scrim { display: block; position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.35); }
+  .main { padding: 24px 16px 64px; }
+  .brand small, .ver, .top-links .lbl { display: none; }
+  .topbar { gap: 8px; padding-inline: 12px; }
+  .kbd { display: none; }
+  .search { padding-right: 12px; }
+  .page h1 { font-size: 28px; }
+  .pager { grid-template-columns: 1fr; }
+  .pager .next { grid-column: 1; }
+}
+</style>
+
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open navigation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <a class="brand" href="#overview" data-go="overview"><span class="brand-mark">∂ᵅ</span>fracmem <small>docs</small></a>
+  <span class="ver">v0.2.0</span>
+  <div class="search-wrap">
+    <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" class="search" type="search" placeholder="Search docs" autocomplete="off" aria-label="Search documentation">
+    <span class="kbd">Ctrl K</span>
+    <div id="results" class="results" hidden></div>
+  </div>
+  <nav class="top-links">
+    <a class="icon-btn" href="https://github.com/edith-lang/fracmem" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+      <span class="lbl">GitHub</span>
+    </a>
+    <a class="icon-btn" href="https://pypi.org/project/fracmem/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>
+      <span class="lbl">PyPI</span>
+    </a>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation navigation"></aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <div class="content" id="content">
+
+<!-- =================================================================== -->
+<section class="page" id="p-overview" data-group="Get started" data-title="Overview">
+  <h1>fracmem</h1>
+  <p class="lede">Fractional-order derivatives as a fixed-size recursive filter. Fit it once in Python, then run it on a microcontroller with constant compute and constant memory per sample, for as long as the device stays on.</p>
+  <div class="btns">
+    <a class="btn primary" href="#quickstart" data-go="quickstart">Get started
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="btn" href="#installation" data-go="installation">Install</a>
+    <a class="btn" href="#embedded" data-go="embedded">Deploy to C</a>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><b>L + p</b><span>multiply-adds per sample</span></div>
+    <div class="fact"><b>924 B</b><span>C state per filter, default limits</span></div>
+    <div class="fact"><b>0</b><span>heap allocations in the C runtime</span></div>
+    <div class="fact"><b>3.6e-7</b><span>max gap, compiled C vs Python, 200 samples</span></div>
+  </div>
+
+  <h2 id="overview-why">Why it exists</h2>
+  <p>A fractional derivative of order α has memory. The value at time <i>t</i> depends on the whole past of the signal, with weights that fall off slowly, like <code>j^(-α-1)</code>. Computed exactly, every new sample costs a little more than the last, and memory grows without limit. That rules it out on a flight controller, a motor driver, or anything else that runs for hours on a few kilobytes of RAM.</p>
+  <p>fracmem splits the history in two:</p>
+  <ul>
+    <li>The latest <code>L</code> samples go through an exact FIR filter.</li>
+    <li>Everything older goes through <code>p</code> exponential modes ("leaky buckets"). Each mode costs one multiply-add per sample.</li>
+  </ul>
+  <p>The decay rates of the modes come from a Gamma-function identity, not from data. Only the <code>p</code> readout weights are fitted, by cross-validated ridge regression on a few example signals. The result is <code>O(L+p)</code> compute and <code>O(L+p)</code> memory per sample, however long the signal runs.</p>
+
+  <h2 id="overview-explore">Explore the docs</h2>
+  <div class="cards">
+    <a class="card" href="#installation" data-go="installation"><span class="c-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg>Installation</span><p>pip, from source, or a dev setup with tests.</p></a>
+    <a class="card" href="#quickstart" data-go="quickstart"><span class="c-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>Quickstart</span><p>Fit, predict and check against the exact answer in five minutes.</p></a>
+    <a class="card" href="#embedded" data-go="embedded"><span class="c-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>Embedded C</span><p>Export a fitted filter to a .c file and compile it for your board.</p></a>
+    <a class="card" href="#how-it-works" data-go="how-it-works"><span class="c-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M5 20V9m5 11V4m5 16v-7m5 7V11"/></svg>How it works</span><p>The math: exact window, sum-of-exponentials tail, data-fit readout.</p></a>
+    <a class="card" href="#tuning" data-go="tuning"><span class="c-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Choosing L, p, j_max</span><p>Measured error and cost for each size.</p></a>
+    <a class="card" href="#api-filter" data-go="api-filter"><span class="c-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>API reference</span><p>Every public class, function and C call.</p></a>
+  </div>
+
+  <h2 id="overview-glance">At a glance</h2>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">import numpy as np
+from fracmem import CompressedFractionalFilter
+
+train = [np.random.randn(3000).cumsum() * 0.01 for _ in range(8)]
+
+f = CompressedFractionalFilter(alpha=0.5, h=0.01, L=32, p=16)
+f.fit(train, j_max=10_000)       # once, offline
+y = f.predict(signal)            # batch
+
+f.reset_stream()
+y_k = f.step(x_k)                # or one sample at a time</code></pre></div>
+  <div class="code"><div class="code-head"><span>c</span></div><pre><code class="lang-c">#include "fracmemfilter.h"
+
+filtSetup();                        /* once at startup */
+float y = fracmemStep(&amp;filt, x_k);  /* every sample, forever */</code></pre></div>
+
+  <h2 id="overview-who">Who it is for</h2>
+  <ul>
+    <li>Control engineers running fractional-order PID (PI<sup>λ</sup>D<sup>μ</sup>) or CRONE controllers on real hardware.</li>
+    <li>Anyone modelling viscoelastic, diffusive or battery dynamics who needs a fractional derivative inside a real-time loop.</li>
+    <li>Researchers who want a fast, checked reference for the Grünwald–Letnikov, Riemann–Liouville or Caputo derivative on long signals.</li>
+  </ul>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-installation" data-group="Get started" data-title="Installation">
+  <h1>Installation</h1>
+  <p class="lede">fracmem is a pure-Python package on PyPI. The C runtime ships inside it, so a single install covers both fitting and deployment.</p>
+
+  <h2 id="installation-req">Requirements</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Component</th><th>Version</th><th>Needed for</th></tr>
+    <tr><td>Python</td><td><code>&gt;= 3.8</code> (CI runs 3.9 to 3.12)</td><td>Everything on the desktop side</td></tr>
+    <tr><td>NumPy</td><td><code>&gt;= 1.20</code></td><td>Installed automatically</td></tr>
+    <tr><td>SciPy</td><td><code>&gt;= 1.6</code></td><td>Installed automatically</td></tr>
+    <tr><td>C compiler</td><td>any C89 compiler (<code>gcc</code>, <code>clang</code>, <code>arm-none-eabi-gcc</code>, Xtensa, AVR)</td><td>Only for building the exported filter</td></tr>
+  </table></div>
+
+  <h2 id="installation-install">Install the package</h2>
+  <div class="tabs">
+    <div class="tab-list" role="tablist">
+      <button role="tab" aria-selected="true">pip</button>
+      <button role="tab" aria-selected="false">virtual environment</button>
+      <button role="tab" aria-selected="false">from source</button>
+    </div>
+    <div class="tab-panel" role="tabpanel">
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">pip install fracmem</code></pre></div>
+    </div>
+    <div class="tab-panel" role="tabpanel" hidden>
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">python -m venv fracmem-env
+source fracmem-env/bin/activate      # Windows: fracmem-env\Scripts\activate
+pip install fracmem</code></pre></div>
+    </div>
+    <div class="tab-panel" role="tabpanel" hidden>
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">git clone https://github.com/edith-lang/fracmem.git
+cd fracmem
+pip install -e ".[dev]"              # editable install plus pytest</code></pre></div>
+    </div>
+  </div>
+
+  <h2 id="installation-verify">Check the install</h2>
+  <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">python -c "import fracmem; print(fracmem.__version__)"</code></pre></div>
+  <div class="code output"><div class="code-head"><span>output</span></div><pre><code>0.2.0</code></pre></div>
+  <p>To check that the bundled C runtime is present, print its folder:</p>
+  <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">python -c "from fracmem.embedded.export_c import _C_DIR; print(_C_DIR)"</code></pre></div>
+  <p>That folder holds <code>fracmemfilter.h</code> and <code>fracmemfilter.c</code>. You copy these two files into your firmware project once. See <a href="#embedded" data-go="embedded">Embedded C</a>.</p>
+
+  <h2 id="installation-compiler">Install a C compiler (optional)</h2>
+  <p>You only need a desktop compiler to run the C round-trip example and the C tests. Your firmware toolchain does the real build.</p>
+  <div class="tabs">
+    <div class="tab-list" role="tablist">
+      <button role="tab" aria-selected="true">Ubuntu / Debian</button>
+      <button role="tab" aria-selected="false">macOS</button>
+      <button role="tab" aria-selected="false">Windows</button>
+    </div>
+    <div class="tab-panel" role="tabpanel">
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">sudo apt install build-essential</code></pre></div>
+    </div>
+    <div class="tab-panel" role="tabpanel" hidden>
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">xcode-select --install</code></pre></div>
+    </div>
+    <div class="tab-panel" role="tabpanel" hidden>
+      <p>Install MSYS2 or the WinLibs MinGW build and put <code>gcc</code> on <code>PATH</code>. The examples look for <code>cc</code> first, then <code>gcc</code>.</p>
+    </div>
+  </div>
+  <div class="callout note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg><div>
+    <strong class="ct">Note</strong>
+    <p>Without a compiler, <code>tests/test_embedded_c.py</code> skips instead of failing, and <code>examples/embedded-export-c.py</code> still writes the <code>.c</code> file. It only skips the compile-and-compare step.</p>
+  </div></div>
+
+  <h2 id="installation-dev">Development install and tests</h2>
+  <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">git clone https://github.com/edith-lang/fracmem.git
+cd fracmem
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -e ".[dev]"
+pytest tests/ -v</code></pre></div>
+  <div class="code output"><div class="code-head"><span>output</span></div><pre><code>......................                                    [100%]
+22 passed in 1.40s</code></pre></div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-quickstart" data-group="Get started" data-title="Quickstart">
+  <h1>Quickstart</h1>
+  <p class="lede">Fit a half-derivative filter on eight training signals, run it on a signal 15 times longer, and compare it with the exact computation.</p>
+
+  <ol class="steps">
+    <li><span class="step-t">Install</span>
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">pip install fracmem</code></pre></div>
+    </li>
+    <li><span class="step-t">Collect training signals</span>
+      <p>Use a handful of signals that look like what the filter will see in service. Eight to 32 is usually enough. They must all be the same length. Here they are random walks.</p>
+      <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">import numpy as np
+from fracmem import CompressedFractionalFilter
+
+rng = np.random.default_rng(0)
+train_signals = [np.cumsum(rng.standard_normal(3000)) * 0.01 for _ in range(8)]</code></pre></div>
+    </li>
+    <li><span class="step-t">Fit the filter</span>
+      <p><code>alpha</code> is the order of the derivative, <code>h</code> is the sample period in seconds, <code>L</code> is the exact window and <code>p</code> is the number of tail modes. <code>j_max</code> is how far back, in samples, the tail is designed to reach.</p>
+      <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">filt = CompressedFractionalFilter(alpha=0.5, h=0.01, L=32, p=16)
+filt.fit(train_signals, j_max=10_000)
+print(f"fitted: L={filt.L}, p={filt.p}, ridge reg={filt.reg_used:.1e}")</code></pre></div>
+    </li>
+    <li><span class="step-t">Run it and compare with the exact answer</span>
+      <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">from fracmem import full_gl_derivative, gl_weights
+
+test_signal = np.cumsum(rng.standard_normal(50_000)) * 0.01
+y_hat = filt.predict(test_signal)
+
+w = gl_weights(0.5, len(test_signal) + 1)
+y_exact = full_gl_derivative(test_signal, 0.5, 0.01, w)
+
+rmse = np.sqrt(np.mean((y_hat - y_exact) ** 2))
+scale = np.sqrt(np.mean(y_exact ** 2))
+print(f"RMSE vs exact: {rmse:.6f} ({100 * rmse / scale:.3f}% relative)")</code></pre></div>
+      <p>This is <code>examples/basic-usage.py</code>. On our machine it prints:</p>
+      <div class="code output"><div class="code-head"><span>output</span></div><pre><code>fitted: L=32, p=16, ridge reg=1.0e-10
+
+signal length:      50,000 samples
+compressed predict:  83.81 ms  (O(L+p) per sample, fixed)
+exact reference:     157.09 ms  (O(n) per sample, grows forever)
+RMSE vs exact:       0.002226  (signal RMS: 0.193502, 1.150% relative)</code></pre></div>
+    </li>
+    <li><span class="step-t">Stream one sample at a time</span>
+      <p>In a real-time loop, call <code>step()</code> instead of <code>predict()</code>. It gives the same numbers.</p>
+      <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">filt.reset_stream()
+for x_k in sensor_samples():
+    d_half = filt.step(x_k)</code></pre></div>
+    </li>
+  </ol>
+
+  <div class="callout tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3Z"/></svg><div>
+    <strong class="ct">Tip</strong>
+    <p>The timing line compares a Python loop with NumPy's optimized convolution, so the speed gap is small here. What matters on a device is that the compressed cost per sample is fixed, while the exact cost grows with every sample.</p>
+  </div></div>
+
+  <h2 id="quickstart-next">Next steps</h2>
+  <ul>
+    <li><a href="#embedded" data-go="embedded">Export the filter to C</a> and run it on a board.</li>
+    <li><a href="#tuning" data-go="tuning">Pick L, p and j_max</a> for your accuracy and RAM budget.</li>
+    <li><a href="#no-training" data-go="no-training">Build a filter with no training data</a> when you have none yet.</li>
+  </ul>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-fitting" data-group="Guides" data-title="Fitting a filter">
+  <h1>Fitting a filter</h1>
+  <p class="lede">How <code>fit()</code> works, what data it needs, and which parts of the filter the data can and cannot change.</p>
+
+  <h2 id="fitting-what">What gets fitted</h2>
+  <p>A fitted filter has three sets of numbers:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Numbers</th><th>Count</th><th>Where they come from</th></tr>
+    <tr><td><code>w</code>, local weights</td><td class="num">L</td><td>The exact Grünwald–Letnikov recursion. Never approximated.</td></tr>
+    <tr><td><code>lam</code>, decay rates</td><td class="num">p</td><td>Log-spaced quadrature of a Gamma-function integral. Pure math, no data.</td></tr>
+    <tr><td><code>c</code>, readout weights</td><td class="num">p</td><td>Ridge regression on your training signals. The only thing data touches.</td></tr>
+  </table></div>
+  <p>Because <code>lam</code> is fixed before any data is seen, fitting <code>c</code> is a linear least-squares problem. It is convex and has one solution, so there is no random initialization and no local minimum to land in.</p>
+
+  <h2 id="fitting-data">Choosing training signals</h2>
+  <ul>
+    <li><b>Look like deployment.</b> Use logs from the real sensor, or a simulation of it. Random walks are a good default for slowly drifting signals such as positions and integrated rates.</li>
+    <li><b>Same length.</b> <code>fit()</code> stacks the signals into one array, so every signal must have the same number of samples.</li>
+    <li><b>Enough of them.</b> Cross-validation uses up to 4 folds over the signals. Use at least 4 signals, and 8 to 32 in practice.</li>
+    <li><b>Longer than L.</b> The tail only starts after the first <code>L</code> samples. Signals of a few thousand samples work well.</li>
+  </ul>
+
+  <h2 id="fitting-jmax">The j_max argument</h2>
+  <p><code>j_max</code> sets the slowest decay rate. The slowest mode is designed to still matter about <code>j_max</code> samples back. If you leave it out, it defaults to the training signal length.</p>
+  <div class="callout warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div>
+    <strong class="ct">Caution</strong>
+    <p>Set <code>j_max</code> to at least the longest stretch of history you expect to matter in deployment, not just the training length. Training on 3,000 samples with <code>j_max=10_000</code> is normal and is what the examples do.</p>
+  </div></div>
+
+  <h2 id="fitting-reg">Regularization</h2>
+  <p><code>fit()</code> picks the ridge strength by k-fold cross-validation across your training signals. It tries each value in <code>reg_candidates</code>, keeps the one with the lowest held-out error, then refits on all signals. The chosen value is stored in <code>filt.reg_used</code>.</p>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">filt.fit(train_signals, j_max=10_000,
+         reg_candidates=(1e-10, 1e-9, 1e-8, 1e-7))
+print(filt.reg_used)</code></pre></div>
+  <p>The default grid is <code>1e-11</code> to <code>1e-5</code>. The penalty is scaled by each mode's own energy, so one value works across modes of very different size.</p>
+
+  <h2 id="fitting-target">What the fit minimizes</h2>
+  <p>For each training signal, <code>fit()</code> computes the exact derivative with the full convolution, subtracts the exact local term, and fits <code>c</code> so the modes explain what is left:</p>
+  <div class="formula">target = D<sup>α</sup>x<sub>exact</sub> − local<sub>L</sub>(x) &nbsp;≈&nbsp; Σ<sub>i</sub> c<sub>i</sub> · m<sub>i</sub>[k]</div>
+  <p>This minimizes end-to-end error on the kind of signal you train on. That is why a fitted filter often beats the purely analytic one on drifting signals at small <code>L</code> and <code>p</code>.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-streaming" data-group="Guides" data-title="Streaming">
+  <h1>Streaming, one sample at a time</h1>
+  <p class="lede"><code>predict()</code> processes a whole array. <code>step()</code> processes one sample and keeps its state between calls, which is what a control loop needs.</p>
+
+  <h2 id="streaming-api">The streaming API</h2>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">filt.reset_stream()          # clear the window and the modes
+for x_k in samples:
+    y_k = filt.step(x_k)     # one estimate per sample</code></pre></div>
+  <p><code>step()</code> calls <code>reset_stream()</code> for you the first time. Call it yourself when you start a new run, for example after re-arming a vehicle.</p>
+
+  <h2 id="streaming-same">Same numbers as predict()</h2>
+  <p>The tests check that streaming every sample of a signal gives the same output as <code>predict()</code> on the whole signal, for both the <code>"gl"</code> and <code>"caputo"</code> definitions. The C runtime is checked against the same reference.</p>
+
+  <h2 id="streaming-step">What one step does</h2>
+  <ol>
+    <li>For Caputo only: remember the first sample <code>x0</code>, and subtract it from every sample.</li>
+    <li>Push <code>x_k</code> into the length-<code>L</code> window. The sample that falls out, <code>x_{k-L}</code>, feeds the tail.</li>
+    <li>Local term: dot product of the window with <code>w</code>, times <code>h^-α</code>.</li>
+    <li>Tail: for each mode, <code>m_i = lam_i * m_i + x_{k-L}</code>. Then sum <code>c_i * m_i</code>.</li>
+    <li>Return local + tail.</li>
+  </ol>
+  <p>That is <code>L + p</code> multiply-adds, and nothing is allocated.</p>
+
+  <h2 id="streaming-loop">Example: a fixed-rate loop</h2>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">import time
+from fracmem import CompressedFractionalFilter
+
+filt = CompressedFractionalFilter.load("half_derivative.npz")
+filt.reset_stream()
+
+period = filt.h
+next_t = time.monotonic()
+while running:
+    x_k = read_sensor()
+    u = kp * x_k + kd * filt.step(x_k)   # fractional PD term
+    write_actuator(u)
+    next_t += period
+    time.sleep(max(0.0, next_t - time.monotonic()))</code></pre></div>
+  <div class="callout note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg><div>
+    <strong class="ct">Note</strong>
+    <p>The filter assumes a fixed sample period <code>h</code>. If your loop runs at a different rate, fit a new filter for that rate.</p>
+  </div></div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-definitions" data-group="Guides" data-title="GL, RL and Caputo">
+  <h1>GL, RL and Caputo definitions</h1>
+  <p class="lede">Pick the definition with the <code>definition</code> argument. All three use the same filter; Caputo only changes the input.</p>
+
+  <div class="table-wrap"><table>
+    <tr><th>Value</th><th>Meaning</th><th>Use it when</th></tr>
+    <tr><td><code>"gl"</code> (default)</td><td>Grünwald–Letnikov. Assumes x(t) = 0 before t = 0.</td><td>The signal starts at rest, or you want the textbook discretization.</td></tr>
+    <tr><td><code>"rl"</code></td><td>Riemann–Liouville. Same discretization as <code>"gl"</code> for a causal signal.</td><td>You want the code to say RL. The numbers are identical to <code>"gl"</code>.</td></tr>
+    <tr><td><code>"caputo"</code></td><td>Caputo: the RL derivative of x(t) − x(0).</td><td>The signal starts at a nonzero value, as in most physical systems and controllers.</td></tr>
+  </table></div>
+
+  <h2 id="definitions-why">Why Caputo matters in practice</h2>
+  <p>If a sensor reads 1.0 at power-on, the GL/RL derivative sees a step from 0 to 1.0 at t = 0. That step leaves a <code>t^-α</code> transient that decays slowly. Caputo subtracts the first sample, so a constant input gives zero output, as you would expect from a derivative.</p>
+  <div class="formula">D<sup>α</sup><sub>C</sub> x(t) = D<sup>α</sup><sub>RL</sub> [ x(t) − x(0) ](t)<span class="lbl">0 &lt; α &lt; 1</span></div>
+
+  <h2 id="definitions-code">Usage</h2>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">filt = CompressedFractionalFilter(alpha=0.5, h=0.01, L=32, p=16,
+                                  definition="caputo")
+filt.fit(train_signals, j_max=10_000)</code></pre></div>
+  <p>The definition is stored by <code>save()</code> and baked into the C export. On the device, <code>caputo = 1</code> makes <code>fracmemStep</code> record the first sample after each <code>fracmemReset</code>.</p>
+  <div class="callout warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div>
+    <strong class="ct">Caution</strong>
+    <p>Any other string raises <code>ValueError</code>. Caputo is defined here for 0 &lt; α &lt; 1. The test suite exercises α = 0.5.</p>
+  </div></div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-no-training" data-group="Guides" data-title="Filters without training data">
+  <h1>Filters without training data</h1>
+  <p class="lede"><code>from_analytic()</code> builds a ready-to-deploy filter from math alone. Use it to flash a device before you have any logs.</p>
+
+  <h2 id="no-training-usage">Usage</h2>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">from fracmem import CompressedFractionalFilter
+
+filt = CompressedFractionalFilter.from_analytic(alpha=0.5, h=0.01, L=32, p=16,
+                                                j_max=20_000)
+y_hat = filt.predict(signal)</code></pre></div>
+  <p>Both <code>lam</code> and <code>c</code> come from the sum-of-exponentials construction. <code>c</code> is fitted to the exact kernel weights, not to any signal. The result works with <code>predict()</code>, <code>step()</code>, <code>save()</code> and <code>export_c()</code> like a fitted filter.</p>
+
+  <h2 id="no-training-knobs">The two design knobs</h2>
+  <dl class="params">
+    <dt>tail_fit_points <em>int = 400</em></dt>
+    <dd>How many log-spaced points along the tail the kernel fit checks. More points give a more careful fit at a one-time cost.</dd>
+    <dt>tail_fit_reg <em>float = 0.1</em></dt>
+    <dd>How strongly the kernel fit is kept away from extreme weights. Lower trusts the fit more.</dd>
+    <dt>j_max <em>int = max(2000, 100·L)</em></dt>
+    <dd>How far back the design reaches. Set it to cover the longest history you need.</dd>
+  </dl>
+
+  <h2 id="no-training-measured">How it compares with fit()</h2>
+  <p>Relative RMS error against the exact derivative on a 20,000-sample random walk, α = 0.5, h = 0.01. The fitted filters used eight 3,000-sample training walks.</p>
+  <div class="table-wrap"><table>
+    <tr><th>L</th><th>p</th><th class="num">fit(), j_max=20k</th><th class="num">from_analytic, j_max=20k</th><th class="num">from_analytic, default j_max</th></tr>
+    <tr><td class="num">16</td><td class="num">8</td><td class="num">3.38 %</td><td class="num">34.3 %</td><td class="num">61.6 %</td></tr>
+    <tr><td class="num">32</td><td class="num">16</td><td class="num">0.65 %</td><td class="num">0.009 %</td><td class="num">2.32 %</td></tr>
+    <tr><td class="num">64</td><td class="num">32</td><td class="num">0.13 %</td><td class="num">&lt; 0.001 %</td><td class="num">0.078 %</td></tr>
+  </table></div>
+  <p>Two things stand out. At small sizes the analytic filter fails badly and <code>fit()</code> is far better. At L=32, p=16 and above, with <code>j_max</code> set to the signal length, the analytic filter is excellent. The default <code>j_max</code> (3,200 for L=32) is too short for a 20,000-sample signal, and the error shows it.</p>
+  <div class="callout warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div>
+    <strong class="ct">Validate before trusting it</strong>
+    <p>The certified bound covers how well the kernel weights are matched, point by point. It is not a bound on end-to-end error for every signal. Long drifting signals are very sensitive to the tail. Check the filter on a realistic signal with <code>full_gl_derivative</code> before you rely on it.</p>
+  </div></div>
+
+  <h2 id="no-training-export">Straight to C</h2>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">from fracmem.embedded import export_c
+
+filt = CompressedFractionalFilter.from_analytic(
+    alpha=0.5, h=0.01, L=16, p=8,
+    tail_fit_points=800,   # more careful than the default 400
+    tail_fit_reg=0.05,     # trust the fit a bit more than the default 0.1
+)
+export_c(filt, "device_filter.c", instance_name="deployed")</code></pre></div>
+  <p>This is <code>examples/embedded-export-c.py</code>.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-tuning" data-group="Guides" data-title="Choosing L, p and j_max">
+  <h1>Choosing L, p and j_max</h1>
+  <p class="lede">Three numbers set accuracy, CPU cost and RAM. All figures on this page were measured with fracmem 0.2.0.</p>
+
+  <h2 id="tuning-cost">Cost per sample</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Size</th><th class="num">Multiply-adds per sample</th><th class="num">Constants (floats)</th><th class="num">State (floats)</th></tr>
+    <tr><td>L=16, p=8</td><td class="num">24</td><td class="num">32</td><td class="num">24</td></tr>
+    <tr><td>L=32, p=16</td><td class="num">48</td><td class="num">64</td><td class="num">48</td></tr>
+    <tr><td>L=64, p=32</td><td class="num">96</td><td class="num">128</td><td class="num">96</td></tr>
+  </table></div>
+  <p>The C struct reserves room for the maximum size (L=64, p=32) whatever you use. <code>sizeof(FracmemFilter)</code> is 924 bytes on x86-64 with gcc. Lower <code>fracmemMaxL</code> and <code>fracmemMaxP</code> in the header to shrink it.</p>
+
+  <h2 id="tuning-cert">Kernel accuracy</h2>
+  <p>Worst-case relative error of the tail weights against the exact Grünwald–Letnikov weights, from <code>soe_tail_error</code> with <code>j_max = 10,000</code>:</p>
+  <div class="table-wrap"><table>
+    <tr><th>α</th><th class="num">L=16, p=8</th><th class="num">L=32, p=16</th><th class="num">L=64, p=32</th></tr>
+    <tr><td class="num">0.3</td><td class="num">1.8e-01</td><td class="num">9.5e-03</td><td class="num">4.3e-06</td></tr>
+    <tr><td class="num">0.5</td><td class="num">1.2e-01</td><td class="num">6.7e-03</td><td class="num">6.9e-07</td></tr>
+    <tr><td class="num">0.8</td><td class="num">6.2e-02</td><td class="num">4.0e-03</td><td class="num">9.4e-08</td></tr>
+  </table></div>
+  <p>Doubling both L and p cuts the kernel error by roughly 10 to 10,000 times. Lower orders (small α) have longer memory and are harder.</p>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">from fracmem import gl_weights, soe_tail_kernel, soe_tail_error
+
+alpha, L, p, j_max = 0.5, 32, 16, 10_000
+w = gl_weights(alpha, j_max + 1)
+lam, c = soe_tail_kernel(alpha, L, p, w, j_max)
+print(soe_tail_error(alpha, L, w, lam, c, j_max))   # 0.00674...</code></pre></div>
+
+  <h2 id="tuning-rules">Rules of thumb</h2>
+  <ul>
+    <li><b>Start at L=32, p=16.</b> It is the default, it costs 48 multiply-adds, and it fits well on drifting signals.</li>
+    <li><b>Keep p about L/2.</b> All measured configurations use this ratio.</li>
+    <li><b>Set j_max to the memory you need.</b> For 100 Hz and 100 s of relevant history, use <code>j_max=10_000</code>.</li>
+    <li><b>Stay within L ≤ 64 and p ≤ 32</b> for the C export, or raise the limits in <code>fracmemfilter.h</code>.</li>
+    <li><b>Always check end-to-end.</b> Run <code>predict()</code> on a realistic signal and compare with <code>full_gl_derivative</code>.</li>
+  </ul>
+
+  <h2 id="tuning-h">The sample period h</h2>
+  <p><code>h</code> only scales the output by <code>h^-α</code>. The filter shape depends on α, L, p and j_max. You still need a filter per sample rate, because <code>j_max</code> is counted in samples and the scale factor is baked into the C export.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-persistence" data-group="Guides" data-title="Saving and loading">
+  <h1>Saving and loading</h1>
+  <p class="lede">Save a fitted filter to a small <code>.npz</code> file, then load it in another process without refitting.</p>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">filt.save("half_derivative.npz")
+
+from fracmem import CompressedFractionalFilter
+filt = CompressedFractionalFilter.load("half_derivative.npz")
+y = filt.predict(signal)</code></pre></div>
+
+  <h2 id="persistence-contents">What the file holds</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Key</th><th>Type</th></tr>
+    <tr><td><code>alpha</code>, <code>h</code></td><td>float</td></tr>
+    <tr><td><code>L</code>, <code>p</code></td><td>int</td></tr>
+    <tr><td><code>definition</code></td><td>str: <code>"gl"</code>, <code>"rl"</code> or <code>"caputo"</code></td></tr>
+    <tr><td><code>lam</code></td><td>float64 array, length p</td></tr>
+    <tr><td><code>c</code></td><td>float64 array, length p</td></tr>
+  </table></div>
+  <p>The local weights <code>w</code> are not stored; they are recomputed from α. <code>reg_used</code> and streaming state are not saved. A loaded filter starts with a fresh stream.</p>
+  <div class="callout note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg><div>
+    <strong class="ct">Note</strong>
+    <p><code>save()</code> raises <code>RuntimeError</code> if the filter has not been fitted or built with <code>from_analytic()</code>.</p>
+  </div></div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-embedded" data-group="Deploy" data-title="Embedded C">
+  <h1>Deploy to embedded C</h1>
+  <p class="lede">Fitting needs NumPy and SciPy. Running the filter needs about 60 lines of plain C, no heap and no libraries.</p>
+
+  <ol class="steps">
+    <li><span class="step-t">Export the constants</span>
+      <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">from fracmem.embedded import export_c
+
+export_c(filt, "device_filter.c")              # instance_name="filt" by default</code></pre></div>
+    </li>
+    <li><span class="step-t">Copy three files into your project</span>
+      <div class="table-wrap"><table>
+        <tr><th>File</th><th>Where from</th><th>How often</th></tr>
+        <tr><td><code>fracmemfilter.h</code></td><td><code>src/fracmem/embedded/c/</code></td><td>Once</td></tr>
+        <tr><td><code>fracmemfilter.c</code></td><td><code>src/fracmem/embedded/c/</code></td><td>Once</td></tr>
+        <tr><td><code>device_filter.c</code></td><td>Generated by <code>export_c</code></td><td>Each time you refit</td></tr>
+      </table></div>
+    </li>
+    <li><span class="step-t">Call it from your firmware</span>
+      <div class="code"><div class="code-head"><span>c</span></div><pre><code class="lang-c">#include "fracmemfilter.h"
+
+extern FracmemFilter filt;
+void filtSetup(void);
+
+void app_init(void)
+{
+    filtSetup();                       /* copies constants, clears state */
+}
+
+void control_tick(void)                /* called every h seconds */
+{
+    float x = read_sensor();
+    float d_half = fracmemStep(&amp;filt, x);
+    /* use d_half in your controller */
+}</code></pre></div>
+    </li>
+    <li><span class="step-t">Build</span>
+      <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">gcc -O2 -o app main.c device_filter.c fracmemfilter.c -I path/to/fracmem/c</code></pre></div>
+      <p>With a firmware toolchain, add the two <code>.c</code> files to your sources and the header folder to your include path.</p>
+    </li>
+  </ol>
+
+  <h2 id="embedded-generated">What export_c generates</h2>
+  <p>Real output for <code>from_analytic(alpha=0.5, h=0.01, L=16, p=8)</code>, with arrays shortened here:</p>
+  <div class="code"><div class="code-head"><span>device_filter.c</span></div><pre><code class="lang-c">/* Auto-generated by fracmem.embedded.export_c -- do not edit by hand.
+   alpha=0.5  h=0.01  L=16  p=8  definition='gl'
+   Compile together with fracmemfilter.c (see embedded/c/). */
+#include "fracmemfilter.h"
+
+static const float filtW[16] = {1.00000000f, -0.50000000f, -0.12500000f, ...};
+static const float filtLam[8] = {...};
+static const float filtC[8] = {...};
+
+FracmemFilter filt;
+
+void filtSetup(void)
+{
+    fracmemInit(&amp;filt, 16, 8, 10.00000000f, 0,
+                filtW, filtLam, filtC);
+}</code></pre></div>
+  <p><code>10.0</code> is <code>h^-α = 0.01^-0.5</code>. The <code>0</code> after it means Caputo is off.</p>
+
+  <h2 id="embedded-multi">Several filters in one firmware</h2>
+  <p>Give each export its own <code>instance_name</code>. Compile <code>fracmemfilter.c</code> once.</p>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">export_c(roll_filter,  "roll_filter.c",  instance_name="rollD")
+export_c(pitch_filter, "pitch_filter.c", instance_name="pitchD")</code></pre></div>
+  <div class="code"><div class="code-head"><span>c</span></div><pre><code class="lang-c">rollDSetup();
+pitchDSetup();
+float dr = fracmemStep(&amp;rollD, roll);
+float dp = fracmemStep(&amp;pitchD, pitch);</code></pre></div>
+
+  <h2 id="embedded-limits">Limits and memory</h2>
+  <ul>
+    <li><code>fracmemMaxL = 64</code> and <code>fracmemMaxP = 32</code> are set in the header. <code>export_c</code> raises <code>ValueError</code> if your filter is larger.</li>
+    <li>Each <code>FracmemFilter</code> uses 924 bytes at the default limits. Lower the limits to save RAM.</li>
+    <li>The runtime uses <code>float</code> (32-bit). On cores with a single-precision FPU, such as Cortex-M4F and ESP32, it runs in hardware.</li>
+    <li>The source is C89: no VLAs, no <code>malloc</code>, no <code>&lt;math.h&gt;</code>.</li>
+  </ul>
+
+  <h2 id="embedded-platforms">Platform notes</h2>
+  <div class="tabs">
+    <div class="tab-list" role="tablist">
+      <button role="tab" aria-selected="true">Arduino</button>
+      <button role="tab" aria-selected="false">ESP-IDF</button>
+      <button role="tab" aria-selected="false">STM32 / bare metal</button>
+    </div>
+    <div class="tab-panel" role="tabpanel">
+      <p>Put the three files next to your <code>.ino</code> file. The Arduino IDE compiles every <code>.c</code> file in the sketch folder.</p>
+      <div class="code"><div class="code-head"><span>c++</span></div><pre><code class="lang-c">extern "C" {
+#include "fracmemfilter.h"
+extern FracmemFilter filt;
+void filtSetup(void);
+}
+
+void setup() { filtSetup(); }
+void loop()  { float y = fracmemStep(&amp;filt, analogRead(A0) * 0.001f); delay(10); }</code></pre></div>
+      <p><code>.ino</code> files are C++, and the header has no C++ guards of its own, so wrap the include and declarations in <code>extern "C"</code>. Without it the sketch fails to link.</p>
+    </div>
+    <div class="tab-panel" role="tabpanel" hidden>
+      <p>Add the files to a component, and list them in its <code>CMakeLists.txt</code>:</p>
+      <div class="code"><div class="code-head"><span>cmake</span></div><pre><code class="lang-bash">idf_component_register(SRCS "main.c" "device_filter.c" "fracmemfilter.c"
+                       INCLUDE_DIRS ".")</code></pre></div>
+    </div>
+    <div class="tab-panel" role="tabpanel" hidden>
+      <p>Add both <code>.c</code> files to your Makefile or IDE project. Call <code>fracmemStep</code> from a timer interrupt or a fixed-rate RTOS task running at <code>1/h</code> Hz.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-verify" data-group="Deploy" data-title="Verifying the C build">
+  <h1>Verifying the C build</h1>
+  <p class="lede">Before flashing, compile the exported file on your desktop and check that it gives the same numbers as Python.</p>
+
+  <h2 id="verify-example">Run the round-trip example</h2>
+  <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">python examples/embedded-export-c.py</code></pre></div>
+  <div class="code output"><div class="code-head"><span>output</span></div><pre><code>built with no training data: L=16 p=8 tail_fit_points=800 tail_fit_reg=0.05
+exported 1044 bytes to device_filter.c
+
+compiled and ran the exported C file successfully
+max |desktop - compiled C| over 200 samples: 3.55e-07  (float32 rounding only)</code></pre></div>
+  <p>The script exports a filter, writes a small <code>main.c</code> that reads samples from stdin, compiles it with <code>cc</code> or <code>gcc</code>, and compares the output with <code>predict()</code>.</p>
+
+  <h2 id="verify-own">Check your own filter</h2>
+  <div class="code"><div class="code-head"><span>main.c</span></div><pre><code class="lang-c">#include &lt;stdio.h&gt;
+#include "fracmemfilter.h"
+
+extern FracmemFilter filt;
+void filtSetup(void);
+
+int main(void)
+{
+    float xk;
+    filtSetup();
+    while (scanf("%f", &amp;xk) == 1) {
+        printf("%.8f\n", fracmemStep(&amp;filt, xk));
+    }
+    return 0;
+}</code></pre></div>
+  <div class="code"><div class="code-head"><span>python</span></div><pre><code class="lang-python">import subprocess, numpy as np
+
+subprocess.run(["gcc", "-O2", "-o", "check", "main.c", "device_filter.c",
+                "fracmemfilter.c", "-I", "path/to/fracmem/c"], check=True)
+
+x = np.cumsum(np.random.default_rng(7).standard_normal(200)) * 0.01
+out = subprocess.run(["./check"], input="\n".join(map(repr, x)),
+                     capture_output=True, text=True, check=True).stdout
+y_c = np.array(out.split(), dtype=float)
+print(np.max(np.abs(y_c - filt.predict(x))))</code></pre></div>
+  <div class="callout tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3Z"/></svg><div>
+    <strong class="ct">What to expect</strong>
+    <p>Differences around 1e-7 relative to the output scale are float32 rounding. A difference near the output size itself usually means a mismatched <code>h</code>, definition, or a stale <code>device_filter.c</code>.</p>
+  </div></div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-how-it-works" data-group="Concepts" data-title="How it works">
+  <h1>How it works</h1>
+  <p class="lede">An exact fractional derivative is a convolution with a slowly decaying kernel. fracmem keeps the head of that kernel exact and replaces the tail with a short sum of exponentials.</p>
+
+  <h2 id="how-target">The target</h2>
+  <p>The Grünwald–Letnikov derivative of order α with sample period h:</p>
+  <div class="formula">D<sup>α</sup>x(t<sub>k</sub>) ≈ h<sup>−α</sup> Σ<sub>j=0</sub><sup>k</sup> w<sub>j</sub> x<sub>k−j</sub></div>
+  <div class="formula">w<sub>0</sub> = 1, &nbsp; w<sub>j</sub> = w<sub>j−1</sub> (1 − (1+α)/j)<span class="lbl">exact recursion</span></div>
+  <div class="formula">|w<sub>j</sub>| ~ j<sup>−α−1</sup> / |Γ(−α)| &nbsp; as j → ∞<span class="lbl">power-law tail</span></div>
+  <p>The sum grows with k. The weights decay as a power law, so no fixed window is long enough to truncate it safely.</p>
+
+  <figure>
+    <div class="fig"><svg id="kernelPlot" viewBox="0 0 720 300" role="img" aria-label="Log-log plot of GL weight magnitude against lag j for alpha 0.5"></svg></div>
+    <figcaption>|w<sub>j</sub>| for α = 0.5, computed in your browser with the exact recursion. The orange band is the exact window (L = 32). The rest, out to j = 10,000, is what the p modes approximate.</figcaption>
+  </figure>
+
+  <h2 id="how-split">Split the history</h2>
+  <figure>
+    <div class="fig"><svg viewBox="0 0 720 250" role="img" aria-label="Diagram: newest L samples go through an exact FIR; older samples feed p leaky buckets; outputs are summed">
+      <text class="sv-text" x="20" y="22">older samples</text>
+      <text class="sv-text" x="700" y="22" text-anchor="end">newest x_k</text>
+      <g id="ticks"></g>
+      <rect class="sv-acc-soft" x="472" y="34" width="232" height="56" rx="6" fill-opacity=".9"/>
+      <text class="sv-strong" x="588" y="110" text-anchor="middle">exact window: last L samples</text>
+      <text class="sv-text" x="588" y="126" text-anchor="middle">FIR with exact weights w₀ … w_{L−1}</text>
+      <rect class="sv-blue-soft" x="16" y="34" width="448" height="56" rx="6" fill-opacity=".6"/>
+      <text class="sv-strong" x="240" y="110" text-anchor="middle">tail: everything older than L</text>
+      <text class="sv-text" x="240" y="126" text-anchor="middle">enters one sample at a time as x_{k−L}</text>
+      <path class="sv-line-blue" d="M240 134 V156" stroke-width="1.5" marker-end="url(#arr)"/>
+      <path class="sv-line-acc" d="M588 134 V200 H470" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <g id="buckets"></g>
+      <circle class="sv-box" cx="452" cy="200" r="16"/>
+      <text class="sv-strong" x="452" y="205" text-anchor="middle">Σ</text>
+      <path class="sv-line-muted" d="M452 216 V236 H620" stroke-width="1.5" marker-end="url(#arr3)"/>
+      <text class="sv-mono" x="630" y="240">y_k</text>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" class="sv-blue"/></marker>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" class="sv-acc"/></marker>
+        <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="currentColor" class="sv-text"/></marker>
+      </defs>
+    </svg></div>
+    <figcaption>One step costs L multiply-adds for the window and one multiply-add per bucket, p in all.</figcaption>
+  </figure>
+
+  <h2 id="how-soe">Sum of exponentials, from an identity</h2>
+  <p>The tail rests on an exact integral for a power law, with β = α + 1:</p>
+  <div class="formula">j<sup>−β</sup> = (1/Γ(β)) ∫<sub>0</sub><sup>∞</sup> s<sup>β−1</sup> e<sup>−sj</sup> ds</div>
+  <p>Discretize the integral at p log-spaced nodes s<sub>i</sub> between 1/j<sub>max</sub> and 8. Each node becomes one exponential mode with decay rate λ<sub>i</sub> = e<sup>−s<sub>i</sub></sup>:</p>
+  <div class="formula">w<sub>L+m</sub> ≈ Σ<sub>i=1</sub><sup>p</sup> c<sub>i</sub> λ<sub>i</sub><sup>m</sup></div>
+  <p>An exponential needs no history. Its running sum obeys a one-line recursion:</p>
+  <div class="formula">m<sub>i</sub>[k] = λ<sub>i</sub> m<sub>i</sub>[k−1] + x<sub>k−L</sub>, &nbsp;&nbsp; tail[k] = Σ<sub>i</sub> c<sub>i</sub> m<sub>i</sub>[k]</div>
+
+  <h2 id="how-fit">Data only sets the readout</h2>
+  <p>The decay rates λ are fixed by the quadrature and never fitted. The weights c then have two possible sources:</p>
+  <ul>
+    <li><b>Analytic</b> (<code>from_analytic</code>): least squares against the exact kernel weights at log-spaced lags, with relative weighting and a small ridge term.</li>
+    <li><b>Data</b> (<code>fit</code>): ridge regression against the exact derivative of your training signals, with the penalty chosen by cross-validation.</li>
+  </ul>
+  <p>With λ fixed, both are linear problems with a single solution. Refitting λ from data could only add noise to numbers that already come from an exact identity, so the library never does it.</p>
+
+  <h2 id="how-background">Background</h2>
+  <p>This builds on the sum-of-exponentials method of Jiang, Zhang, Zhang and Zhang for the Caputo derivative, and related work by Lubich and Schädle and by Baffet and Hesthaven on fast convolution for fractional operators. For the GL/RL relationship, see Podlubny, <i>Fractional Differential Equations</i>, chapters 2 and 3.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-accuracy" data-group="Concepts" data-title="Accuracy and limits">
+  <h1>Accuracy and limits</h1>
+  <p class="lede">What is guaranteed, what is measured, and where the filter can go wrong.</p>
+
+  <h2 id="accuracy-exact">Exact parts</h2>
+  <ul>
+    <li>The local weights <code>w_0 … w_{L-1}</code> are exact, from the stable recursion.</li>
+    <li>The first <code>L</code> outputs of a fresh filter are exact, because the tail has not received any input yet.</li>
+    <li><code>step()</code> and <code>predict()</code> agree, and the C runtime agrees with both up to float32 rounding.</li>
+  </ul>
+
+  <h2 id="accuracy-cert">Kernel bound vs end-to-end error</h2>
+  <p><code>soe_tail_error</code> reports the worst relative mismatch between the modes and the exact tail weights. That is a statement about the kernel. End-to-end error on a signal also depends on the signal: a long random walk adds up small kernel errors across thousands of samples.</p>
+  <div class="callout danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16h.01"/></svg><div>
+    <strong class="ct">Do not skip validation</strong>
+    <p>A small kernel error does not guarantee a small output error on every signal. Always measure end-to-end error on realistic data with <code>full_gl_derivative</code>.</p>
+  </div></div>
+
+  <h2 id="accuracy-measured">Measured numbers</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Check</th><th>Setup</th><th class="num">Result</th></tr>
+    <tr><td>Fitted filter vs exact</td><td>α=0.5, L=32, p=16, 50,000-sample walk</td><td class="num">1.15 % rel. RMS</td></tr>
+    <tr><td>Fitted filter vs exact</td><td>α=0.5, L=64, p=32, 20,000-sample walk</td><td class="num">0.13 % rel. RMS</td></tr>
+    <tr><td>Analytic filter vs exact</td><td>α=0.5, L=32, p=16, j_max=20k, 20,000-sample walk</td><td class="num">0.009 % rel. RMS</td></tr>
+    <tr><td>Analytic filter vs exact</td><td>α=0.5, L=16, p=8, j_max=20k, 20,000-sample walk</td><td class="num">34 % rel. RMS</td></tr>
+    <tr><td>Compiled C vs Python</td><td>L=16, p=8, 200 samples</td><td class="num">3.55e-07 max abs</td></tr>
+  </table></div>
+
+  <h2 id="accuracy-limits">Known limits</h2>
+  <ul>
+    <li><b>Fixed sample rate.</b> h is built into the filter. Jittery or variable-rate sampling is not modelled.</li>
+    <li><b>Orders tested.</b> The test suite runs α = 0.5. Other orders in (0, 1) work in the measurements above; check your own α.</li>
+    <li><b>Memory horizon.</b> History much older than j_max is under-weighted. Pick j_max for your use.</li>
+    <li><b>float32 on device.</b> Very long runs with large, slowly growing inputs can lose precision in the slowest modes. Feed the filter signals near zero mean when you can, or use Caputo.</li>
+    <li><b>Python streaming speed.</b> <code>step()</code> is a reference implementation in Python, fine at hundreds of hertz. Use the C runtime for fast loops.</li>
+  </ul>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-api-filter" data-group="API reference" data-title="CompressedFractionalFilter">
+  <h1>CompressedFractionalFilter</h1>
+  <p class="lede">The main class: build, fit, run, stream, save and load. <code>from fracmem import CompressedFractionalFilter</code></p>
+
+  <h2 id="api-ctor">Constructor</h2>
+  <div class="sig">CompressedFractionalFilter(alpha, h, L=32, p=16, definition="gl")</div>
+  <dl class="params">
+    <dt>alpha <em>float</em></dt><dd>Order of the derivative, typically 0 &lt; α &lt; 1.</dd>
+    <dt>h <em>float</em></dt><dd>Sample period in seconds.</dd>
+    <dt>L <em>int = 32</em></dt><dd>Length of the exact local window, in samples.</dd>
+    <dt>p <em>int = 16</em></dt><dd>Number of exponential tail modes.</dd>
+    <dt>definition <em>str = "gl"</em></dt><dd><code>"gl"</code>, <code>"rl"</code> or <code>"caputo"</code>. Anything else raises <code>ValueError</code>.</dd>
+  </dl>
+
+  <h2 id="api-fit">fit <span class="badge m">method</span></h2>
+  <div class="sig">fit(train_signals, j_max=None, reg_candidates=DEFAULT_REG_CANDIDATES) -&gt; self</div>
+  <dl class="params">
+    <dt>train_signals <em>list of 1-D arrays</em></dt><dd>Same-length example signals.</dd>
+    <dt>j_max <em>int | None</em></dt><dd>Memory horizon in samples. Defaults to the training signal length.</dd>
+    <dt>reg_candidates <em>tuple of float</em></dt><dd>Ridge strengths to cross-validate. Default <code>1e-11 … 1e-5</code>.</dd>
+  </dl>
+  <p>Sets <code>lam</code>, <code>c</code> and <code>reg_used</code>. Returns the filter, so you can chain <code>.fit(...).predict(...)</code>.</p>
+
+  <h2 id="api-from-analytic">from_analytic <span class="badge c">classmethod</span></h2>
+  <div class="sig">from_analytic(alpha, h, L=32, p=16, definition="gl", j_max=None,
+              tail_fit_points=400, tail_fit_reg=0.1) -&gt; CompressedFractionalFilter</div>
+  <p>Builds a ready filter with no training data. <code>j_max</code> defaults to <code>max(2000, 100*L)</code>. See <a href="#no-training" data-go="no-training">Filters without training data</a>.</p>
+
+  <h2 id="api-predict">predict <span class="badge m">method</span></h2>
+  <div class="sig">predict(x, w=None) -&gt; np.ndarray</div>
+  <p>Runs the filter over a whole 1-D signal and returns an array of the same length. <code>w</code> overrides the local weights; leave it as <code>None</code>. Raises <code>RuntimeError</code> before fitting.</p>
+
+  <h2 id="api-stream">reset_stream, step <span class="badge m">method</span></h2>
+  <div class="sig">reset_stream(w=None) -&gt; self
+step(x_k: float) -&gt; float</div>
+  <p><code>reset_stream</code> clears the window, the modes and the stored Caputo start value. <code>step</code> feeds one sample and returns one estimate. Both raise <code>RuntimeError</code> before fitting.</p>
+
+  <h2 id="api-save">save, load</h2>
+  <div class="sig">save(path: str) -&gt; None
+CompressedFractionalFilter.load(path: str) -&gt; CompressedFractionalFilter</div>
+  <p>Writes or reads an <code>.npz</code> file. See <a href="#persistence" data-go="persistence">Saving and loading</a>.</p>
+
+  <h2 id="api-attrs">Attributes</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Attribute</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>alpha</code>, <code>h</code>, <code>L</code>, <code>p</code>, <code>definition</code></td><td>as passed</td><td>Constructor arguments.</td></tr>
+    <tr><td><code>lam</code></td><td>ndarray (p,) or None</td><td>Decay rates. Set by <code>fit</code> or <code>from_analytic</code>.</td></tr>
+    <tr><td><code>c</code></td><td>ndarray (p,) or None</td><td>Readout weights, already scaled by <code>h^-α</code>.</td></tr>
+    <tr><td><code>reg_used</code></td><td>float or None</td><td>Ridge strength chosen by cross-validation. <code>None</code> for analytic filters.</td></tr>
+  </table></div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-api-functions" data-group="API reference" data-title="Kernel and SOE functions">
+  <h1>Kernel and SOE functions</h1>
+  <p class="lede">Lower-level building blocks, all importable from <code>fracmem</code>. Use them for reference computations, checks and experiments.</p>
+
+  <h2 id="fn-kernel">Kernel (fracmem.kernel)</h2>
+  <div class="sig">gl_weights(alpha, n) -&gt; np.ndarray</div>
+  <p>Exact GL weights <code>w_0 … w_{n-1}</code> from the stable recursion.</p>
+  <div class="sig">full_gl_derivative(x, alpha, h, w) -&gt; np.ndarray</div>
+  <p>The exact derivative by full convolution. Needs <code>len(w) &gt;= len(x)</code>. Cost grows with signal length; use it as a reference only.</p>
+  <div class="sig">rl_derivative(x, alpha, h, w) -&gt; np.ndarray
+caputo_derivative(x, alpha, h, w) -&gt; np.ndarray</div>
+  <p>Named versions of the exact derivative. <code>rl_derivative</code> equals <code>full_gl_derivative</code>. <code>caputo_derivative</code> subtracts <code>x[0]</code> first, and also accepts a 2-D batch.</p>
+  <div class="sig">local_exact_term(x, alpha, h, L, w) -&gt; np.ndarray
+delay(x, L) -&gt; np.ndarray</div>
+  <p>The exact length-L FIR part, and a zero-padded shift by L samples (1-D or batch).</p>
+
+  <h2 id="fn-soe">Sum of exponentials (fracmem.soe)</h2>
+  <div class="sig">soe_nodes_and_weights(alpha, L, m_max, p) -&gt; (lam, c)</div>
+  <p>Raw quadrature nodes and weights, before any refit.</p>
+  <div class="sig">soe_refit_weights(alpha, L, w, lam, j_max, n_samples=400, reg=0.1) -&gt; c</div>
+  <p>Least-squares refit of <code>c</code> against the exact tail weights.</p>
+  <div class="sig">soe_tail_kernel(alpha, L, p, w, j_max, tail_fit_points=400, tail_fit_reg=0.1) -&gt; (lam, c)</div>
+  <p>Quadrature plus refit: the full classical construction with no data.</p>
+  <div class="sig">soe_tail_error(alpha, L, w, lam, c, j_max, n_probe=200) -&gt; float</div>
+  <p>Worst relative error of <code>c · lam^m</code> against <code>w[L+m]</code>, probed at log-spaced lags.</p>
+
+  <h2 id="fn-filter">Filter helpers (fracmem.filter)</h2>
+  <div class="sig">diagonal_recurrence(x_delayed, lam, c) -&gt; np.ndarray</div>
+  <p>The deployed tail recursion, written as a plain loop.</p>
+  <div class="sig">mode_features(lam, x_delayed) -&gt; np.ndarray      # shape (p, B, T)
+ridge_solve_c(features, target, reg) -&gt; c
+cv_select_reg(features, target, n_signals, candidates=..., n_folds=4) -&gt; (reg, cv_rmse)</div>
+  <p>The pieces <code>fit()</code> uses: batched mode traces, energy-scaled ridge solve, and k-fold selection of the ridge strength.</p>
+  <div class="sig">DEFINITIONS = ("gl", "rl", "caputo")</div>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-api-embedded" data-group="API reference" data-title="fracmem.embedded">
+  <h1>fracmem.embedded</h1>
+  <p class="lede">Python-side export of a filter's constants to C.</p>
+
+  <h2 id="emb-export">export_c</h2>
+  <div class="sig">export_c(filt, path, w=None, instance_name="filt") -&gt; None</div>
+  <p>Writes the output of <code>generate_source_c</code> to <code>path</code>.</p>
+
+  <h2 id="emb-gen">generate_source_c</h2>
+  <div class="sig">generate_source_c(filt, w=None, instance_name="filt") -&gt; str</div>
+  <dl class="params">
+    <dt>filt <em>CompressedFractionalFilter</em></dt><dd>A fitted or analytic filter. Raises <code>RuntimeError</code> if neither.</dd>
+    <dt>w <em>array | None</em></dt><dd>Local weights to embed. Defaults to <code>gl_weights(alpha, L)</code>.</dd>
+    <dt>instance_name <em>str = "filt"</em></dt><dd>Prefix for every generated symbol: <code>&lt;name&gt;W</code>, <code>&lt;name&gt;Lam</code>, <code>&lt;name&gt;C</code>, the <code>FracmemFilter &lt;name&gt;</code> object, and <code>&lt;name&gt;Setup()</code>.</dd>
+  </dl>
+  <p>Raises <code>ValueError</code> if <code>L &gt; 64</code> or <code>p &gt; 32</code>. Constants are printed with 8 decimals as <code>float</code> literals.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-api-c" data-group="API reference" data-title="C runtime API">
+  <h1>C runtime API</h1>
+  <p class="lede">Everything in <code>fracmemfilter.h</code>. Three functions and one struct.</p>
+
+  <h2 id="c-limits">Limits</h2>
+  <div class="sig">enum { fracmemMaxL = 64, fracmemMaxP = 32 };</div>
+  <p>Compile-time maxima for every filter. Change them and rebuild to trade RAM for size.</p>
+
+  <h2 id="c-struct">FracmemFilter</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+    <tr><td><code>L</code>, <code>p</code></td><td>int</td><td>Sizes in use.</td></tr>
+    <tr><td><code>hPow</code></td><td>float</td><td><code>h^-α</code>, computed in Python.</td></tr>
+    <tr><td><code>caputo</code></td><td>int</td><td>1 to subtract the first sample.</td></tr>
+    <tr><td><code>w[fracmemMaxL]</code></td><td>float</td><td>Exact local weights.</td></tr>
+    <tr><td><code>lam[fracmemMaxP]</code>, <code>c[fracmemMaxP]</code></td><td>float</td><td>Decay rates and readout weights.</td></tr>
+    <tr><td><code>buf[fracmemMaxL]</code>, <code>idx</code></td><td>float, int</td><td>Circular buffer of the last L samples.</td></tr>
+    <tr><td><code>m[fracmemMaxP]</code></td><td>float</td><td>Mode states.</td></tr>
+    <tr><td><code>x0</code>, <code>x0Set</code></td><td>float, int</td><td>Caputo start value.</td></tr>
+  </table></div>
+
+  <h2 id="c-init">fracmemInit</h2>
+  <div class="sig">void fracmemInit(FracmemFilter *f, int L, int p, float hPow, int caputo,
+                 const float *w, const float *lam, const float *c);</div>
+  <p>Copies the constants into <code>f</code> and resets its state. The generated <code>&lt;name&gt;Setup()</code> calls this for you.</p>
+
+  <h2 id="c-reset">fracmemReset</h2>
+  <div class="sig">void fracmemReset(FracmemFilter *f);</div>
+  <p>Zeros the window and modes and forgets the Caputo start value. Constants are kept.</p>
+
+  <h2 id="c-step">fracmemStep</h2>
+  <div class="sig">float fracmemStep(FracmemFilter *f, float xk);</div>
+  <p>Feeds one sample and returns one derivative estimate. Exactly <code>L + p</code> multiply-adds. Not reentrant on the same <code>f</code>; use one filter per signal and per thread.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-examples" data-group="Resources" data-title="Examples">
+  <h1>Examples</h1>
+  <p class="lede">Both scripts live in <code>examples/</code> and run in CI on every push.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Script</th><th>Shows</th><th>Needs</th></tr>
+    <tr><td><a href="https://github.com/edith-lang/fracmem/blob/main/examples/basic-usage.py" target="_blank" rel="noopener"><code>basic-usage.py</code></a></td><td>Fit, deploy on a 50,000-sample signal, compare speed and accuracy with the exact reference.</td><td>fracmem</td></tr>
+    <tr><td><a href="https://github.com/edith-lang/fracmem/blob/main/examples/embedded-export-c.py" target="_blank" rel="noopener"><code>embedded-export-c.py</code></a></td><td>Build with <code>from_analytic</code>, export to C, compile, run, and compare with Python.</td><td>fracmem, <code>cc</code> or <code>gcc</code></td></tr>
+  </table></div>
+  <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">git clone https://github.com/edith-lang/fracmem.git
+cd fracmem
+pip install -e .
+python examples/basic-usage.py
+python examples/embedded-export-c.py</code></pre></div>
+  <p>Their output is shown on the <a href="#quickstart" data-go="quickstart">Quickstart</a> and <a href="#verify" data-go="verify">Verifying the C build</a> pages.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-contributing" data-group="Resources" data-title="Testing and contributing">
+  <h1>Testing and contributing</h1>
+  <p class="lede">fracmem is small and checked by tests. Changes should keep it that way.</p>
+
+  <h2 id="contrib-tests">The test suite</h2>
+  <div class="table-wrap"><table>
+    <tr><th>File</th><th>Checks</th></tr>
+    <tr><td><code>test_fracmem.py</code></td><td>GL weights, SOE beats naive truncation, fit improves on the analytic filter, cost does not grow with signal length.</td></tr>
+    <tr><td><code>test_definitions.py</code></td><td>RL equals GL, Caputo equals GL of the shifted signal, Caputo ignores a constant offset.</td></tr>
+    <tr><td><code>test_streaming.py</code></td><td><code>step()</code> matches <code>predict()</code> for GL and Caputo; reset works.</td></tr>
+    <tr><td><code>test_from_analytic.py</code></td><td>No-data construction, the tail-fit knobs, default <code>j_max</code>, h ≠ 1 scaling.</td></tr>
+    <tr><td><code>test_persistence.py</code></td><td>Save and load round trip.</td></tr>
+    <tr><td><code>test_embedded_c.py</code></td><td>Compiled C matches Python for GL and Caputo; generated file compiles.</td></tr>
+  </table></div>
+  <p>CI runs the tests and both examples on Python 3.9, 3.10, 3.11 and 3.12 for every push and pull request to <code>main</code>.</p>
+
+  <h2 id="contrib-rules">Design rules</h2>
+  <ul>
+    <li><b>Never fit λ from data.</b> The decay rates come from an exact identity. If you believe a case needs it, open an issue with data first.</li>
+    <li><b>No heavy dependencies.</b> NumPy and SciPy on the desktop, plain C on the device.</li>
+    <li><b>Every fix comes with a test</b> that fails without it.</li>
+  </ul>
+
+  <h2 id="contrib-pr">Pull requests</h2>
+  <ol>
+    <li>Fork, branch, and make the change with tests.</li>
+    <li>Run <code>pytest tests/ -v</code>.</li>
+    <li>Explain why in the PR, especially for anything in the fitting logic.</li>
+  </ol>
+  <p>Reports from real hardware are especially welcome. Include the board, α, h, L, p and what you measured.</p>
+</section>
+
+<!-- =================================================================== -->
+<section class="page" id="p-faq" data-group="Resources" data-title="FAQ and troubleshooting">
+  <h1>FAQ and troubleshooting</h1>
+  <p class="lede">Common errors and questions.</p>
+
+  <h2 id="faq-runtime">RuntimeError: call .fit(...) before .predict(...)</h2>
+  <p>The filter has no <code>lam</code> and <code>c</code> yet. Call <code>fit()</code>, build it with <code>from_analytic()</code>, or <code>load()</code> a saved one. The message mentions <code>fit</code> in every case.</p>
+
+  <h2 id="faq-shape">fit() fails with a shape error</h2>
+  <p>Your training signals have different lengths. Trim them to a common length.</p>
+
+  <h2 id="faq-export">ValueError: L=… p=… exceed fracmemMaxL=64 / fracmemMaxP=32</h2>
+  <p>Use a smaller filter, or raise the limits in <code>fracmemfilter.h</code> and use that header in your firmware.</p>
+
+  <h2 id="faq-pytest">pytest crashes on import of an unrelated plugin</h2>
+  <p>Other software on your machine, such as ROS, can put pytest plugins on <code>PYTHONPATH</code>. Run the tests in a clean environment:</p>
+  <div class="code"><div class="code-head"><span>bash</span></div><pre><code class="lang-bash">env -u PYTHONPATH PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/ -q</code></pre></div>
+
+  <h2 id="faq-drift">The output drifts on a long run</h2>
+  <ul>
+    <li>Check that <code>j_max</code> covers the history you care about.</li>
+    <li>If the signal starts away from zero, use <code>definition="caputo"</code>.</li>
+    <li>If you used <code>from_analytic</code> at a small size, fit on real data instead.</li>
+  </ul>
+
+  <h2 id="faq-alpha">Can α be larger than 1?</h2>
+  <p>The method and tests target 0 &lt; α &lt; 1. For orders above 1, take integer derivatives separately and apply fracmem to the fractional part.</p>
+
+  <h2 id="faq-integral">Can it compute fractional integrals?</h2>
+  <p>Not in 0.2.0. The kernel and the C runtime are written for derivatives.</p>
+
+  <h2 id="faq-license">License</h2>
+  <p>MIT. Author: Adithyan Lalu. Source and issues on <a href="https://github.com/edith-lang/fracmem" target="_blank" rel="noopener">GitHub</a>.</p>
+</section>
+
+    </div>
+    <nav class="pager" id="pager"></nav>
+    <div class="page-foot content">
+      <a id="editLink" href="https://github.com/edith-lang/fracmem/tree/main/docs" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit this page on GitHub</a>
+      <span>fracmem 0.2.0 · MIT license</span>
+    </div>
+  </main>
+
+  <aside class="toc" id="toc" aria-label="On this page"></aside>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var pages = Array.prototype.slice.call(document.querySelectorAll(".page"));
+  var byId = {};
+  pages.forEach(function (p) { byId[p.id.slice(2)] = p; });
+  var order = pages.map(function (p) { return p.id.slice(2); });
+  var groups = [];
+  pages.forEach(function (p) {
+    var g = p.dataset.group;
+    var last = groups[groups.length - 1];
+    if (!last || last.name !== g) groups.push(last = { name: g, items: [] });
+    last.items.push(p);
+  });
+
+  /* ---------- sidebar ---------- */
+  var chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>';
+  var sb = document.getElementById("sidebar");
+  sb.innerHTML = groups.map(function (g) {
+    return '<details class="nav-group" open><summary>' + g.name + chevron + '</summary><ul>' +
+      g.items.map(function (p) {
+        var id = p.id.slice(2);
+        return '<li><a href="#' + id + '" data-go="' + id + '">' + p.dataset.title + '</a></li>';
+      }).join("") + '</ul></details>';
+  }).join("");
+
+  /* ---------- syntax highlighting ---------- */
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  var rules = {
+    python: { re: /("""[\s\S]*?"""|'''[\s\S]*?'''|[rbf]?"(?:\\.|[^"\\\n])*"|[rbf]?'(?:\\.|[^'\\\n])*')|(#[^\n]*)|\b(def|class|return|import|from|as|for|in|if|else|elif|while|with|None|True|False|and|or|not|lambda|try|except|raise|pass)\b|\b(\d[\d_]*(?:\.\d+)?(?:e-?\d+)?)\b|\b([A-Za-z_]\w*)(?=\()/g,
+              cls: ["tk-str", "tk-com", "tk-kw", "tk-num", "tk-fn"] },
+    c: { re: /(\/\*[\s\S]*?\*\/|\/\/[^\n]*)|("(?:\\.|[^"\\\n])*")|(^[ \t]*#\w+)|\b(float|int|void|static|const|return|for|if|while|typedef|struct|enum|extern|unsigned|char|double)\b|\b(\d+(?:\.\d+)?f?)\b|\b([A-Za-z_]\w*)(?=\s*\()/gm,
+         cls: ["tk-com", "tk-str", "tk-pre", "tk-kw", "tk-num", "tk-fn"] },
+    bash: { re: /("[^"\n]*"|'[^'\n]*')|((?:^|\s)#[^\n]*)|(^|&&\s*|\|\s*)(pip|python|python3|git|cd|source|gcc|cc|pytest|env|sudo|xcode-select|idf_component_register)\b/gm,
+            cls: ["tk-str", "tk-com", null, "tk-fn"] }
+  };
+  function highlight(src, lang) {
+    var r = rules[lang]; if (!r) return esc(src);
+    var out = "", last = 0, m;
+    r.re.lastIndex = 0;
+    while ((m = r.re.exec(src))) {
+      if (m[0] === "") { r.re.lastIndex++; continue; }
+      out += esc(src.slice(last, m.index));
+      var piece = "";
+      for (var i = 1; i < m.length; i++) {
+        if (m[i] === undefined) continue;
+        var c = r.cls[i - 1];
+        piece += c ? '<span class="' + c + '">' + esc(m[i]) + "</span>" : esc(m[i]);
+      }
+      out += piece;
+      last = m.index + m[0].length;
+    }
+    return out + esc(src.slice(last));
+  }
+  document.querySelectorAll("pre code[class^='lang-']").forEach(function (el) {
+    el.innerHTML = highlight(el.textContent, el.className.slice(5));
+  });
+
+  /* ---------- copy buttons ---------- */
+  var copyIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+  document.querySelectorAll(".code:not(.output) .code-head").forEach(function (head) {
+    var b = document.createElement("button");
+    b.className = "copy"; b.type = "button"; b.innerHTML = copyIc + "Copy";
+    b.addEventListener("click", function () {
+      var code = head.parentNode.querySelector("code");
+      var text = code.textContent;
+      function done(label) { b.innerHTML = copyIc + label; setTimeout(function () { b.innerHTML = copyIc + "Copy"; }, 1400); }
+      try {
+        navigator.clipboard.writeText(text).then(function () { done("Copied"); }, function () { selectIt(code); done("Selected"); });
+      } catch (e) { selectIt(code); done("Selected"); }
+    });
+    head.appendChild(b);
+  });
+  function selectIt(node) { var r = document.createRange(); r.selectNodeContents(node); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+  /* ---------- tabs ---------- */
+  document.querySelectorAll(".tabs").forEach(function (t) {
+    var btns = t.querySelectorAll(".tab-list button"), panels = t.querySelectorAll(".tab-panel");
+    btns.forEach(function (b, i) {
+      b.addEventListener("click", function () {
+        btns.forEach(function (x, j) { x.setAttribute("aria-selected", i === j ? "true" : "false"); panels[j].hidden = i !== j; });
+      });
+    });
+  });
+
+  /* ---------- heading anchors ---------- */
+  pages.forEach(function (p) {
+    p.querySelectorAll("h2[id], h3[id]").forEach(function (h) {
+      var a = document.createElement("a"); a.className = "anchor"; a.href = "#" + h.id; a.textContent = "#";
+      a.setAttribute("aria-label", "Link to this section");
+      a.addEventListener("click", function (e) { e.preventDefault(); h.scrollIntoView({ behavior: "smooth" }); });
+      h.appendChild(a);
+    });
+  });
+
+  /* ---------- routing ---------- */
+  var current = null;
+  var tocEl = document.getElementById("toc"), pager = document.getElementById("pager");
+  var editLink = document.getElementById("editLink");
+  function show(id, opts) {
+    var target = id, section = null;
+    if (!byId[id]) {
+      var el = document.getElementById(id);
+      var host = el && el.closest && el.closest(".page");
+      if (host) { target = host.id.slice(2); section = el; } else target = "overview";
+    }
+    if (current !== target) {
+      pages.forEach(function (p) { p.classList.toggle("shown", p === byId[target]); });
+      current = target;
+      buildChrome(byId[target]);
+    }
+    document.querySelectorAll("#sidebar a").forEach(function (a) { a.classList.toggle("active", a.dataset.go === target); });
+    document.title = (target === "overview" ? "fracmem docs" : byId[target].dataset.title + " · fracmem docs");
+    document.body.classList.remove("nav-open");
+    if (section) section.scrollIntoView();
+    else if (!(opts && opts.keepScroll)) window.scrollTo(0, 0);
+    try { localStorage.setItem("fracmem-docs-page", target); } catch (e) {}
+  }
+  function buildChrome(p) {
+    var id = p.id.slice(2);
+    if (!p.querySelector(".crumbs")) {
+      var c = document.createElement("div"); c.className = "crumbs";
+      c.innerHTML = "<span>Docs</span><span>" + p.dataset.group + "</span><span>" + p.dataset.title + "</span>";
+      p.insertBefore(c, p.firstChild);
+    }
+    var hs = p.querySelectorAll("h2[id]");
+    tocEl.innerHTML = hs.length ? "<h4>On this page</h4><ul>" + Array.prototype.map.call(hs, function (h) {
+      return '<li><a href="#' + h.id + '" data-sec="' + h.id + '">' + h.firstChild.textContent + "</a></li>";
+    }).join("") + "</ul>" : "";
+    tocEl.innerHTML += '<div class="toc-extra"><a href="https://github.com/edith-lang/fracmem/issues" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Report an issue</a><a href="#top" data-top="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg>Back to top</a></div>';
+    var i = order.indexOf(id), prev = byId[order[i - 1]], next = byId[order[i + 1]];
+    pager.className = "pager content";
+    pager.innerHTML =
+      (prev ? '<a class="prev" href="#' + order[i - 1] + '" data-go="' + order[i - 1] + '"><span class="lbl">Previous</span><span class="t">' + prev.dataset.title + "</span></a>" : "") +
+      (next ? '<a class="next" href="#' + order[i + 1] + '" data-go="' + order[i + 1] + '"><span class="lbl">Next</span><span class="t">' + next.dataset.title + "</span></a>" : "");
+    spy();
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a");
+    if (!a) return;
+    if (a.dataset.go) {
+      e.preventDefault();
+      if (location.hash !== "#" + a.dataset.go) history.pushState(null, "", "#" + a.dataset.go);
+      show(a.dataset.go);
+      closeResults();
+    } else if (a.dataset.sec) {
+      e.preventDefault();
+      document.getElementById(a.dataset.sec).scrollIntoView({ behavior: "smooth" });
+    } else if (a.dataset.top) {
+      e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+  window.addEventListener("popstate", function () { show(location.hash.slice(1) || "overview"); });
+
+  /* scroll spy */
+  function spy() {
+    if (!current) return;
+    var hs = byId[current].querySelectorAll("h2[id]"), on = null;
+    for (var i = 0; i < hs.length; i++) if (hs[i].getBoundingClientRect().top < 140) on = hs[i].id;
+    if (!on && hs.length) on = hs[0].id;
+    tocEl.querySelectorAll("a[data-sec]").forEach(function (a) { a.classList.toggle("on", a.dataset.sec === on); });
+  }
+  window.addEventListener("scroll", spy, { passive: true });
+
+  /* ---------- mobile nav ---------- */
+  document.getElementById("menuBtn").addEventListener("click", function () { document.body.classList.toggle("nav-open"); });
+  document.getElementById("scrim").addEventListener("click", function () { document.body.classList.remove("nav-open"); });
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem("fracmem-docs-theme"); if (saved) root.setAttribute("data-theme", saved); } catch (e) {}
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") ? root.getAttribute("data-theme") === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("fracmem-docs-theme", next); } catch (e) {}
+  });
+
+  /* ---------- search ---------- */
+  var input = document.getElementById("search"), results = document.getElementById("results");
+  var index = pages.map(function (p) {
+    return { id: p.id.slice(2), title: p.dataset.title, group: p.dataset.group, text: p.textContent.replace(/\s+/g, " ") };
+  });
+  var sel = 0;
+  function closeResults() { results.hidden = true; }
+  function hiEsc(s, q) {
+    var i = s.toLowerCase().indexOf(q);
+    if (i < 0) return esc(s);
+    return esc(s.slice(0, i)) + "<mark>" + esc(s.slice(i, i + q.length)) + "</mark>" + esc(s.slice(i + q.length));
+  }
+  function runSearch() {
+    var q = input.value.trim().toLowerCase();
+    if (!q) { closeResults(); return; }
+    var hits = [];
+    index.forEach(function (d) {
+      var ti = d.title.toLowerCase().indexOf(q), xi = d.text.toLowerCase().indexOf(q);
+      if (ti < 0 && xi < 0) return;
+      var snip = xi >= 0 ? d.text.slice(Math.max(0, xi - 30), xi + 80) : d.text.slice(0, 100);
+      hits.push({ d: d, score: (ti >= 0 ? 0 : 1), snip: snip });
+    });
+    hits.sort(function (a, b) { return a.score - b.score; });
+    sel = 0;
+    results.innerHTML = hits.length ? hits.slice(0, 8).map(function (h, i) {
+      return '<a href="#' + h.d.id + '" data-go="' + h.d.id + '"' + (i === 0 ? ' class="sel"' : "") + '><span class="r-t">' + hiEsc(h.d.title, q) +
+        '</span><span class="r-g">' + h.d.group + '</span><span class="r-s">' + hiEsc(h.snip, q) + "</span></a>";
+    }).join("") : '<div class="empty">No pages mention “' + esc(input.value.trim()) + '”.</div>';
+    results.hidden = false;
+  }
+  input.addEventListener("input", runSearch);
+  input.addEventListener("focus", function () { if (input.value.trim()) runSearch(); });
+  input.addEventListener("keydown", function (e) {
+    var items = results.querySelectorAll("a");
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (!items.length) return;
+      e.preventDefault();
+      sel = (sel + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length;
+      items.forEach(function (a, i) { a.classList.toggle("sel", i === sel); });
+    } else if (e.key === "Enter" && items[sel]) {
+      e.preventDefault(); items[sel].click(); input.blur(); input.value = "";
+    } else if (e.key === "Escape") { closeResults(); input.blur(); }
+  });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".search-wrap")) closeResults(); });
+  document.addEventListener("keydown", function (e) {
+    if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && document.activeElement !== input && !/INPUT|TEXTAREA/.test(document.activeElement.tagName))) {
+      e.preventDefault(); input.focus(); input.select();
+    }
+  });
+
+  /* ---------- figures ---------- */
+  (function buildSplitDiagram() {
+    var ns = "http://www.w3.org/2000/svg", g = document.getElementById("ticks");
+    for (var i = 0; i < 44; i++) {
+      var x = 26 + i * 15.8, exact = i >= 30;
+      var r = document.createElementNS(ns, "rect");
+      var hgt = 10 + 22 * Math.abs(Math.sin(i * 0.7) * 0.6 + Math.cos(i * 0.23) * 0.4);
+      r.setAttribute("x", x); r.setAttribute("y", 80 - hgt); r.setAttribute("width", 7); r.setAttribute("height", hgt); r.setAttribute("rx", 1.5);
+      r.setAttribute("class", exact ? "sv-acc" : "sv-blue");
+      r.setAttribute("opacity", exact ? 1 : (0.25 + 0.7 * i / 30).toFixed(2));
+      g.appendChild(r);
+    }
+    var b = document.getElementById("buckets");
+    var labels = ["λ₁", "λ₂", "λ₃", "…", "λ_p"];
+    labels.forEach(function (lb, i) {
+      var x = 60 + i * 72;
+      var rect = document.createElementNS(ns, "rect");
+      rect.setAttribute("x", x); rect.setAttribute("y", 162); rect.setAttribute("width", 56); rect.setAttribute("height", 34); rect.setAttribute("rx", 6);
+      rect.setAttribute("class", lb === "…" ? "sv-box" : "sv-blue-soft");
+      b.appendChild(rect);
+      var t = document.createElementNS(ns, "text");
+      t.setAttribute("x", x + 28); t.setAttribute("y", 184); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "sv-mono");
+      t.textContent = lb; b.appendChild(t);
+    });
+    var cap = document.createElementNS(ns, "text");
+    cap.setAttribute("x", 222); cap.setAttribute("y", 216); cap.setAttribute("text-anchor", "middle"); cap.setAttribute("class", "sv-text");
+    cap.textContent = "p leaky buckets: m_i ← λ_i·m_i + x_{k−L}, then Σ c_i·m_i";
+    b.appendChild(cap);
+    var line = document.createElementNS(ns, "path");
+    line.setAttribute("d", "M388 179 H434"); line.setAttribute("class", "sv-line-blue"); line.setAttribute("stroke-width", "1.5");
+    line.setAttribute("marker-end", "url(#arr)");
+    b.appendChild(line);
+  })();
+
+  (function buildKernelPlot() {
+    var ns = "http://www.w3.org/2000/svg", svg = document.getElementById("kernelPlot");
+    var alpha = 0.5, N = 10000, L = 32;
+    var w = [1]; for (var j = 1; j <= N; j++) w.push(w[j - 1] * (1 - (1 + alpha) / j));
+    var X0 = 64, X1 = 700, Y0 = 20, Y1 = 256;
+    var lx = function (j) { return X0 + (Math.log10(j) / 4) * (X1 - X0); };      // j: 1 .. 1e4
+    var ly = function (v) { return Y0 + (-Math.log10(v) / 7) * (Y1 - Y0); };     // |w|: 1 .. 1e-7
+    function el(tag, attrs, text) { var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text) e.textContent = text; svg.appendChild(e); return e; }
+    el("rect", { x: lx(1), y: Y0, width: lx(L) - lx(1), height: Y1 - Y0, class: "sv-acc-soft", "stroke-width": 0, opacity: 0.8 });
+    for (var d = 0; d <= 4; d++) {
+      el("line", { x1: lx(Math.pow(10, d)), x2: lx(Math.pow(10, d)), y1: Y0, y2: Y1, class: "sv-grid" });
+      el("text", { x: lx(Math.pow(10, d)), y: Y1 + 18, "text-anchor": "middle", class: "sv-text" }, ["1", "10", "10²", "10³", "10⁴"][d]);
+    }
+    for (var e = 0; e <= 7; e++) {
+      el("line", { x1: X0, x2: X1, y1: ly(Math.pow(10, -e)), y2: ly(Math.pow(10, -e)), class: "sv-grid" });
+      el("text", { x: X0 - 8, y: ly(Math.pow(10, -e)) + 4, "text-anchor": "end", class: "sv-text" }, e === 0 ? "1" : "10⁻" + "⁰¹²³⁴⁵⁶⁷"[e]);
+    }
+    el("line", { x1: X0, x2: X1, y1: Y1, y2: Y1, class: "sv-axis" });
+    el("line", { x1: X0, x2: X0, y1: Y0, y2: Y1, class: "sv-axis" });
+    var dpath = "";
+    for (var k = 1; k <= N; k = Math.max(k + 1, Math.round(k * 1.04))) dpath += (dpath ? "L" : "M") + lx(k).toFixed(1) + " " + ly(Math.abs(w[k])).toFixed(1);
+    el("path", { d: dpath, class: "sv-line-blue", "stroke-width": 2.2 });
+    var g0 = 3.5449077018110318; // |Γ(-0.5)| = 2√π
+    var apath = "M" + lx(3).toFixed(1) + " " + ly(Math.pow(3, -1.5) / g0).toFixed(1) + "L" + lx(N).toFixed(1) + " " + ly(Math.pow(N, -1.5) / g0).toFixed(1);
+    el("path", { d: apath, class: "sv-line-muted", "stroke-width": 1.2, "stroke-dasharray": "5 4" });
+    el("text", { x: lx(L) / 2 + X0 / 2, y: Y1 - 10, "text-anchor": "middle", class: "sv-strong" }, "exact, j < L");
+    el("text", { x: lx(600), y: ly(Math.abs(w[600])) - 14, class: "sv-strong" }, "tail: p exponential modes");
+    el("text", { x: lx(40), y: ly(Math.pow(40, -1.5) / g0) + 30, class: "sv-text" }, "dashed: j^(−1.5) / |Γ(−0.5)|");
+    el("text", { x: (X0 + X1) / 2, y: Y1 + 38, "text-anchor": "middle", class: "sv-text" }, "lag j (samples)");
+    el("text", { x: 14, y: (Y0 + Y1) / 2, "text-anchor": "middle", class: "sv-text", transform: "rotate(-90 14 " + (Y0 + Y1) / 2 + ")" }, "|w_j|");
+    svg.setAttribute("viewBox", "0 0 720 304");
+  })();
+
+  /* ---------- start ---------- */
+  var start = location.hash.slice(1);
+  if (!start) { try { start = localStorage.getItem("fracmem-docs-page") || ""; } catch (e) {} }
+  show(start || "overview", { keepScroll: false });
+})();
+</script>
+
+</body>
+</html>

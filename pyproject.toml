@@ -45,7 +45,7 @@ dev = ["pytest>=7"]
 
 [project.urls]
 Homepage = "https://github.com/edith-lang/fracmem"
-Documentation = "https://github.com/edith-lang/fracmem"
+Documentation = "https://edith-lang.github.io/fracmem/"
 Repository = "https://github.com/edith-lang/fracmem"
 Issues = "https://github.com/edith-lang/fracmem/issues"
 
